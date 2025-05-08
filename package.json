@@ -9,6 +9,9 @@
     "lint": "next lint",
     "seed": "ts-node prisma/seed.ts"
   },
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
+  },
   "dependencies": {
     "@emotion/is-prop-valid": "latest",
     "@hookform/resolvers": "^3.9.1",
