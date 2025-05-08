@@ -46,15 +46,25 @@ export function TipForm({ eventId, performerId, performerName, paypayId }: TipFo
     e.preventDefault()
     setIsSubmitting(true)
 
-    // 支払い情報をローカルストレージに保存
-    const paymentInfo = {
-      eventId,
-      performerId,
-      performerName,
-      amount,
-      comment,
-    }
-    savePaymentInfo(paymentInfo)
+    try {
+      // データベースに保存
+      await createGifting({
+        userId: 1, // 仮のユーザーID
+        performerId,
+        eventId,
+        amount: parseInt(amount),
+        comment,
+      })
+
+      // 支払い情報をローカルストレージに保存
+      const paymentInfo = {
+        eventId,
+        performerId,
+        performerName,
+        amount,
+        comment,
+      }
+      savePaymentInfo(paymentInfo)
 
     // PayPayリンクを生成（金額に応じたURLを取得）
     const payPayLink = generatePayPayLink(paypayId, amount, comment)
