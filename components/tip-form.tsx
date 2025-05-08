@@ -61,7 +61,8 @@ export function TipForm({ eventId, performerId, performerName, paypayId }: TipFo
       })
 
       if (!response.ok) {
-        throw new Error('Failed to save gifting')
+        const error = await response.json()
+        throw new Error(error.message || 'Failed to save gifting')
       }
 
       const paymentInfo = {
@@ -72,20 +73,8 @@ export function TipForm({ eventId, performerId, performerName, paypayId }: TipFo
         comment,
       }
       savePaymentInfo(paymentInfo)
-
-      const payPayLink = generatePayPayLink(paypayId, amount, comment)
-
-      console.log("Selected amount:", amount)
-      console.log("Generated PayPay link:", payPayLink)
-
-      setTimeout(() => {
-        window.location.href = payPayLink
-
-        setTimeout(() => {
-          setIsSubmitting(false)
-          router.push(`/events/${eventId}/performers/${performerId}/thanks`)
-        }, 500)
-      }, 1000)
+      
+      router.push(`/events/${eventId}/performers/${performerId}/thanks`)
     } catch (error) {
       console.error('Error submitting gifting:', error)
       setIsSubmitting(false)
