@@ -48,13 +48,23 @@ export function TipForm({ eventId, performerId, performerName, paypayId }: TipFo
 
     try {
       // データベースに保存
-      await createGifting({
-        userId: 1, // 仮のユーザーID
-        performerId,
-        eventId,
-        amount: parseInt(amount),
-        comment,
+      const response = await fetch('/api/giftings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: 1, // 仮のユーザーID
+          performerId,
+          eventId,
+          amount: parseInt(amount),
+          comment,
+        }),
       })
+
+      if (!response.ok) {
+        throw new Error('Failed to save gifting')
+      }
 
       // 支払い情報をローカルストレージに保存
       const paymentInfo = {
