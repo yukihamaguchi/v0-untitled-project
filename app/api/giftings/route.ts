@@ -11,20 +11,20 @@ export async function POST(request: Request) {
 
     const gifting = await prisma.gifting.create({
       data: {
-        userId,
-        performerId,
-        eventId,
-        amount,
-        comment,
-        createdAt: new Date(),
-      },
+        userId: userId,
+        performerId: performerId,
+        eventId: eventId,
+        amount: amount,
+        comment: comment,
+        createdAt: new Date()
+      }
     })
 
     return NextResponse.json(gifting)
   } catch (error) {
     console.error('Failed to save gifting:', error)
     return NextResponse.json(
-      { error: 'Failed to save gifting' },
+      { error: 'Failed to save gifting', details: error },
       { status: 500 }
     )
   }
