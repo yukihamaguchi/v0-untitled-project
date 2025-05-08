@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { LogOut, Settings } from "lucide-react"
 import { clearUserSession, getUserSession } from "@/utils/auth"
 import { useRouter } from "next/navigation"
+import { MessageList } from "@/components/message-list"; // Added import
 
 export default function ProfilePage() {
   const router = useRouter()
@@ -15,6 +16,7 @@ export default function ProfilePage() {
     name: "ユーザー",
     email: "user@example.com",
     avatar: "/placeholder.svg?height=100&width=100",
+    id: 1 // Added user ID -  This is a crucial assumption.  A real application would fetch this from the session.
   })
 
   useEffect(() => {
@@ -25,6 +27,7 @@ export default function ProfilePage() {
         name: session.name,
         email: session.email,
         avatar: "/placeholder.svg?height=100&width=100",
+        id: session.id // Assumed session contains user ID
       })
     } else {
       // ログインしていない場合はログインページにリダイレクト
@@ -38,30 +41,9 @@ export default function ProfilePage() {
     router.push("/login")
   }
 
-  // 仮のギフティング履歴
-  const tipHistory = [
-    {
-      id: 1,
-      performer: "天野 しずく",
-      event: "サマーフェス2025",
-      amount: 1000,
-      date: "2023-07-15",
-    },
-    {
-      id: 2,
-      performer: "早乙女 みなと",
-      event: "5周年ライブin横アリ",
-      amount: 3000,
-      date: "2023-12-24",
-    },
-    {
-      id: 3,
-      performer: "有栖川 りお",
-      event: "生誕祭2025",
-      amount: 5000,
-      date: "2024-04-10",
-    },
-  ]
+  // This is now redundant since we fetch the history from the API.
+  // const tipHistory = [ ... ];
+
 
   return (
     <div className="space-y-5">
@@ -96,13 +78,13 @@ export default function ProfilePage() {
               ログアウト
             </Button>
           </div>
+          <div className="mt-8"> {/* Added div for spacing */}
+            <h2 className="text-lg font-bold mb-4">ギフティング履歴</h2>
+            <MessageList userId={user.id} /> {/* Pass userId to MessageList */}
+          </div>
         </CardContent>
       </Card>
 
-      <div>
-        <h2 className="text-lg font-bold mb-3">ギフティング履歴</h2>
-        <TipHistoryCard tipHistory={tipHistory} />
-      </div>
     </div>
   )
 }

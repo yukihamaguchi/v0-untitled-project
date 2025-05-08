@@ -9,11 +9,13 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
     const performerId = searchParams.get("performerId")
     const eventId = searchParams.get("eventId")
+    const userId = searchParams.get("userId")
 
     const giftings = await prisma.gifting.findMany({
       where: {
         ...(performerId && { performerId: Number(performerId) }),
         ...(eventId && { eventId: Number(eventId) }),
+        ...(userId && { userId: Number(userId) }),
       },
       include: {
         user: true,

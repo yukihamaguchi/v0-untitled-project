@@ -16,9 +16,10 @@ interface Message {
 interface MessageListProps {
   eventId?: number;
   performerId?: number;
+  userId?: number;
 }
 
-export function MessageList({ eventId, performerId }: MessageListProps) {
+export function MessageList({ eventId, performerId, userId }: MessageListProps) {
   const [messages, setMessages] = useState<Message[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -28,6 +29,7 @@ export function MessageList({ eventId, performerId }: MessageListProps) {
         const params = new URLSearchParams()
         if (eventId) params.append("eventId", eventId.toString())
         if (performerId) params.append("performerId", performerId.toString())
+        if (userId) params.append("userId", userId.toString())
 
         const response = await fetch(`/api/giftings/history?${params}`)
         const data = await response.json()
