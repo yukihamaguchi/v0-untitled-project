@@ -42,7 +42,7 @@ export default function EventPage({ params }: EventPageProps) {
     },
   }
 
-  const event = events[params.id as keyof typeof events] || events["1"]
+  const event = events[React.use(params).id as keyof typeof events] || events["1"]
 
   // 出演者データ
   const performers = [
