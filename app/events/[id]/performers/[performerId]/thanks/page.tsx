@@ -8,6 +8,7 @@ import { CheckCircle, BanknoteIcon } from "lucide-react"
 import { motion } from "framer-motion"
 import { RippleButton } from "@/components/ripple-button"
 import { getPaymentInfo, clearPaymentInfo } from "@/utils/payment"
+import React from 'react';
 
 interface ThanksPageProps {
   params: {
@@ -17,7 +18,7 @@ interface ThanksPageProps {
 }
 
 export default function ThanksPage({ params }: ThanksPageProps) {
-  const eventId = Number.parseInt(params.id)
+  const eventId = Number.parseInt(React.use(params).id)
   const [paymentInfo, setPaymentInfo] = useState<{
     performerName: string
     amount: string
