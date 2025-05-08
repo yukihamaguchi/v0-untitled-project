@@ -59,6 +59,31 @@ export function MessageList({ eventId, performerId, userId }: MessageListProps) 
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
+    return `${date.getMonth() + 1}/${date.getDate()} ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`
+  }
+
+  return (
+    <div className="space-y-4">
+      {messages.map((message) => (
+        <div key={message.id} className="bg-card p-4 rounded-lg shadow">
+          <div className="flex justify-between items-start mb-2">
+            <div>
+              <p className="font-medium">{message.performer.name}</p>
+              <p className="text-sm text-muted-foreground">{message.event.title}</p>
+            </div>
+            <div className="text-sm text-muted-foreground">
+              {formatDate(message.createdAt)}
+            </div>
+          </div>
+          <p className="text-sm mb-2">{message.comment}</p>
+          <div className="text-sm font-medium text-primary">
+            ¥{message.amount.toLocaleString()}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+    const date = new Date(dateString)
     return `${date.getMonth() + 1}/${date.getDate()} ${date.getHours()}:${String(date.getMinutes()).padStart(2, "0")}`
   }
 
