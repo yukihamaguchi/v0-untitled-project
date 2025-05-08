@@ -21,7 +21,7 @@ interface EventDetailPageProps {
 
 export default function EventDetailPage({ params }: EventDetailPageProps) {
   const router = useRouter()
-  const eventId = Number.parseInt(params.id)
+  const eventId = Number.parseInt(React.use(params).id)
   const [activeTab, setActiveTab] = useState("messages")
   const [isLoading, setIsLoading] = useState(true)
 

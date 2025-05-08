@@ -12,7 +12,7 @@ interface EventPageProps {
 }
 
 export default function EventPage({ params }: EventPageProps) {
-  const eventId = Number.parseInt(params.id)
+  const eventId = Number.parseInt(React.use(params).id)
 
   // イベントデータ
   const events = {
