@@ -1,4 +1,3 @@
-
 const { PrismaClient } = require('@prisma/client');
 
 const prisma = new PrismaClient();
@@ -36,30 +35,13 @@ async function main() {
     ]
   });
 
-  // Create artist users
-  await prisma.user.createMany({
-    data: [
-      {
-        id: 1,
-        name: "天野しずく",
-        email: "artist1@example.com",
-      },
-      {
-        id: 2,
-        name: "早乙女みなと",
-        email: "artist2@example.com",
-      },
-      {
-        id: 3,
-        name: "有栖川りお",
-        email: "artist3@example.com",
-      },
-      {
-        id: 4,
-        name: "白石ほのか",
-        email: "artist4@example.com",
-      }
-    ]
+  // Create fan user
+  await prisma.user.create({
+    data: {
+      id: 1,
+      name: "ファン",
+      email: "user@example.com",
+    }
   });
 }
 
