@@ -1,14 +1,14 @@
 
-import { PrismaClient } from '@prisma/client'
+const { PrismaClient } = require('@prisma/client');
 
-const prisma = new PrismaClient()
+const prisma = new PrismaClient();
 
 async function main() {
   // Clear existing data
-  await prisma.gifting.deleteMany({})
-  await prisma.performer.deleteMany({})
-  await prisma.user.deleteMany({})
-  await prisma.event.deleteMany({})
+  await prisma.gifting.deleteMany({});
+  await prisma.performer.deleteMany({});
+  await prisma.user.deleteMany({});
+  await prisma.event.deleteMany({});
 
   // Create performers
   await prisma.performer.createMany({
@@ -34,7 +34,7 @@ async function main() {
         agency: "サンシャイン",
       }
     ]
-  })
+  });
 
   // Create artist users
   await prisma.user.createMany({
@@ -60,14 +60,14 @@ async function main() {
         email: "artist4@example.com",
       }
     ]
-  })
+  });
 }
 
 main()
   .catch((e) => {
-    console.error(e)
-    process.exit(1)
+    console.error(e);
+    process.exit(1);
   })
   .finally(async () => {
-    await prisma.$disconnect()
-  })
+    await prisma.$disconnect();
+  });
