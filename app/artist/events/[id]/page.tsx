@@ -89,7 +89,7 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
     },
   }
 
-  const event = events[params.id as keyof typeof events] || events["1"]
+  const event = events[React.use(params).id as keyof typeof events] || events["1"]
 
   // 仮のメッセージデータ
   const messages = [
