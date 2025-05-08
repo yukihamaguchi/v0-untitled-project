@@ -1,0 +1,61 @@
+Error: ./components/message-list.tsx
+Error:   [31m×[0m Return statement is not allowed here
+     ╭─[[36;1;4m/home/runner/workspace/components/message-list.tsx[0m:93:1]
+ [2m 90[0m │       //Added to filter out messages where the user is also the performer.
+ [2m 91[0m │       const filteredMessages = messages.filter(message => message.user.name !== message.performer.name);
+ [2m 92[0m │     
+ [2m 93[0m │ [35;1m╭[0m[35;1m─[0m[35;1m▶[0m   return (
+ [2m 94[0m │ [35;1m│[0m       <div className="space-y-4">
+ [2m 95[0m │ [35;1m│[0m         {filteredMessages.map((message) => (
+ [2m 96[0m │ [35;1m│[0m           <Card key={message.id} className="overflow-hidden shadow-md">
+ [2m 97[0m │ [35;1m│[0m             <CardContent className="p-4">
+ [2m 98[0m │ [35;1m│[0m               <div className="flex items-start gap-3">
+ [2m 99[0m │ [35;1m│[0m                 <Avatar className="h-10 w-10">
+ [2m100[0m │ [35;1m│[0m                   <AvatarFallback>{message.performer.name[0]}</AvatarFallback>
+ [2m101[0m │ [35;1m│[0m                 </Avatar>
+ [2m102[0m │ [35;1m│[0m                 <div className="flex-1">
+ [2m103[0m │ [35;1m│[0m                   <div className="flex justify-between items-start">
+ [2m104[0m │ [35;1m│[0m                     <div>
+ [2m105[0m │ [35;1m│[0m                       <p className="font-medium text-sm">{message.performer.name}</p>
+ [2m106[0m │ [35;1m│[0m                       <p className="text-xs text-muted-foreground">{formatDate(message.createdAt)}</p>
+ [2m107[0m │ [35;1m│[0m                     </div>
+ [2m108[0m │ [35;1m│[0m                     <div className="flex items-center gap-1 bg-primary/10 px-2 py-1 rounded-full">
+ [2m109[0m │ [35;1m│[0m                       <BanknoteIcon className="h-3 w-3 text-primary" />
+ [2m110[0m │ [35;1m│[0m                       <p className="font-bold text-primary text-xs">{message.amount.toLocaleString()}円</p>
+ [2m111[0m │ [35;1m│[0m                     </div>
+ [2m112[0m │ [35;1m│[0m                   </div>
+ [2m113[0m │ [35;1m│[0m                   <div className="mt-2 p-3 bg-muted/30 rounded-lg">
+ [2m114[0m │ [35;1m│[0m                     <p className="text-sm">{message.comment}</p>
+ [2m115[0m │ [35;1m│[0m                   </div>
+ [2m116[0m │ [35;1m│[0m                 </div>
+ [2m117[0m │ [35;1m│[0m               </div>
+ [2m118[0m │ [35;1m│[0m             </CardContent>
+ [2m119[0m │ [35;1m│[0m           </Card>
+ [2m120[0m │ [35;1m│[0m         ))}
+ [2m121[0m │ [35;1m│[0m       </div>
+ [2m122[0m │ [35;1m╰[0m[35;1m─[0m[35;1m▶[0m   )
+ [2m123[0m │     }
+     ╰────
+  [31m×[0m Expression expected
+     ╭─[[36;1;4m/home/runner/workspace/components/message-list.tsx[0m:123:1]
+ [2m120[0m │       ))}
+ [2m121[0m │     </div>
+ [2m122[0m │   )
+ [2m123[0m │ }
+     · [35;1m─[0m
+     ╰────
+
+Caused by:
+    Syntax Error
+    at BuildError (webpack-internal:///(pages-dir-browser)/./node_modules/next/dist/client/components/react-dev-overlay/ui/container/build-error.js:43:41)
+    at react-stack-bottom-frame (webpack-internal:///(pages-dir-browser)/./node_modules/react-dom/cjs/react-dom-client.development.js:23864:20)
+    at renderWithHooks (webpack-internal:///(pages-dir-browser)/./node_modules/react-dom/cjs/react-dom-client.development.js:5530:22)
+    at updateFunctionComponent (webpack-internal:///(pages-dir-browser)/./node_modules/react-dom/cjs/react-dom-client.development.js:8898:19)
+    at beginWork (webpack-internal:///(pages-dir-browser)/./node_modules/react-dom/cjs/react-dom-client.development.js:10523:18)
+    at runWithFiberInDEV (webpack-internal:///(pages-dir-browser)/./node_modules/react-dom/cjs/react-dom-client.development.js:1520:30)
+    at performUnitOfWork (webpack-internal:///(pages-dir-browser)/./node_modules/react-dom/cjs/react-dom-client.development.js:15133:22)
+    at workLoopSync (webpack-internal:///(pages-dir-browser)/./node_modules/react-dom/cjs/react-dom-client.development.js:14957:41)
+    at renderRootSync (webpack-internal:///(pages-dir-browser)/./node_modules/react-dom/cjs/react-dom-client.development.js:14937:11)
+    at performWorkOnRoot (webpack-internal:///(pages-dir-browser)/./node_modules/react-dom/cjs/react-dom-client.development.js:14420:13)
+    at performWorkOnRootViaSchedulerTask (webpack-internal:///(pages-dir-browser)/./node_modules/react-dom/cjs/react-dom-client.development.js:16217:7)
+    at MessagePort.performWorkUntilDeadline (webpack-internal:///(pages-dir-browser)/./node_modules/scheduler/cjs/scheduler.development.js:45:48)
