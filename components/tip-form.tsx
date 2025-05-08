@@ -1,7 +1,7 @@
+
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -30,7 +30,6 @@ export function TipForm({ eventId, performerId, performerName, paypayId }: TipFo
 
   const tipAmounts = ["100", "500", "1000", "3000", "5000", "10000"]
 
-  // 絵文字が含まれているかチェック
   const checkForEmoji = (text: string) => {
     const hasEmoji = /[\uD800-\uDBFF][\uDC00-\uDFFF]/g.test(text)
     setShowEmojiWarning(hasEmoji)
@@ -47,14 +46,13 @@ export function TipForm({ eventId, performerId, performerName, paypayId }: TipFo
     setIsSubmitting(true)
 
     try {
-      // データベースに保存
       const response = await fetch('/api/giftings', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          userId: 1, // 仮のユーザーID
+          userId: 1,
           performerId,
           eventId,
           amount: parseInt(amount),
@@ -66,7 +64,6 @@ export function TipForm({ eventId, performerId, performerName, paypayId }: TipFo
         throw new Error('Failed to save gifting')
       }
 
-      // 支払い情報をローカルストレージに保存
       const paymentInfo = {
         eventId,
         performerId,
@@ -76,25 +73,23 @@ export function TipForm({ eventId, performerId, performerName, paypayId }: TipFo
       }
       savePaymentInfo(paymentInfo)
 
-    // PayPayリンクを生成（金額に応じたURLを取得）
-    const payPayLink = generatePayPayLink(paypayId, amount, comment)
+      const payPayLink = generatePayPayLink(paypayId, amount, comment)
 
-    // デバッグ用にコンソールに出力
-    console.log("Selected amount:", amount)
-    console.log("Generated PayPay link:", payPayLink)
+      console.log("Selected amount:", amount)
+      console.log("Generated PayPay link:", payPayLink)
 
-    // 少し遅延を入れて、ユーザーに処理中であることを示す
-    setTimeout(() => {
-      // PayPayアプリに遷移
-      window.location.href = payPayLink
-
-      // PayPayアプリに遷移した後、ユーザーがブラウザに戻ってきたときのために
-      // 少し遅延を入れてから完了画面に遷移
       setTimeout(() => {
-        setIsSubmitting(false)
-        router.push(`/events/${eventId}/performers/${performerId}/thanks`)
-      }, 500)
-    }, 1000)
+        window.location.href = payPayLink
+
+        setTimeout(() => {
+          setIsSubmitting(false)
+          router.push(`/events/${eventId}/performers/${performerId}/thanks`)
+        }, 500)
+      }, 1000)
+    } catch (error) {
+      console.error('Error submitting gifting:', error)
+      setIsSubmitting(false)
+    }
   }
 
   return (
