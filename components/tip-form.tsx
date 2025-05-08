@@ -53,8 +53,8 @@ export function TipForm({ eventId, performerId, performerName, paypayId }: TipFo
         },
         body: JSON.stringify({
           userId: 1,
-          performerId,
-          eventId,
+          performerId: Number(performerId),
+          eventId: Number(eventId),
           amount: parseInt(amount),
           comment,
         }),

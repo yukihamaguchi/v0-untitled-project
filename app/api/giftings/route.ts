@@ -8,13 +8,27 @@ export async function POST(request: Request) {
     const body = await request.json()
     const { userId, performerId, eventId, amount, comment } = body
 
+    // Verify that the referenced records exist
+    const [user, performer, event] = await Promise.all([
+      prisma.user.findUnique({ where: { id: userId } }),
+      prisma.performer.findUnique({ where: { id: performerId } }),
+      prisma.event.findUnique({ where: { id: eventId } })
+    ])
+
+    if (!user || !performer || !event) {
+      return NextResponse.json(
+        { error: 'Referenced records not found' },
+        { status: 404 }
+      )
+    }
+
     const gifting = await prisma.gifting.create({
       data: {
-        userId: userId,
-        performerId: performerId,
-        eventId: eventId,
-        amount: amount,
-        comment: comment,
+        userId,
+        performerId,
+        eventId,
+        amount,
+        comment,
         createdAt: new Date()
       }
     })
