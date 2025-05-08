@@ -3,7 +3,57 @@ import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
+// 初期ユーザーを作成する関数
+async function ensureInitialData() {
+  // ユーザーの作成
+  const existingUser = await prisma.user.findUnique({
+    where: { id: 1 }
+  });
+
+  if (!existingUser) {
+    await prisma.user.create({
+      data: {
+        id: 1,
+        name: "テストユーザー",
+        email: "test@example.com"
+      }
+    });
+  }
+
+  // パフォーマーの作成
+  const existingPerformer = await prisma.performer.findUnique({
+    where: { id: 1 }
+  });
+
+  if (!existingPerformer) {
+    await prisma.performer.create({
+      data: {
+        id: 1,
+        name: "テストパフォーマー",
+        agency: "テスト事務所"
+      }
+    });
+  }
+
+  // イベントの作成
+  const existingEvent = await prisma.event.findUnique({
+    where: { id: 1 }
+  });
+
+  if (!existingEvent) {
+    await prisma.event.create({
+      data: {
+        id: 1,
+        title: "テストイベント",
+        date: new Date()
+      }
+    });
+  }
+}
+
 export async function POST(request: Request) {
+  // APIリクエスト時に初期データの存在を確認
+  await ensureInitialData();
   try {
     const body = await request.json()
     const { userId, performerId, eventId, amount, comment } = body
