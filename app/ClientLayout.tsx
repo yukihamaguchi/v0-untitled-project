@@ -24,6 +24,8 @@ export default function ClientLayout({
   useEffect(() => {
     // 認証が必要なページのパス
     const authRequiredPaths = ["/", "/events", "/following", "/profile", "/events/"]
+    const artistOnlyPaths = ["/artist"]
+    const userOnlyPaths = ["/", "/events", "/following", "/profile"]
 
     // 現在のパスが認証が必要なパスかどうかをチェック
     const isAuthRequired = authRequiredPaths.some((path) =>
@@ -42,6 +44,9 @@ export default function ClientLayout({
       if (!session) {
         // ログインしていない場合はログインページにリダイレクト
         router.push("/login")
+      } else if (userOnlyPaths.some(path => pathname.startsWith(path)) && session.role === "artist") {
+        // アーティストがユーザー専用ページにアクセスしようとした場合
+        router.push("/artist/dashboard")
       } else {
         setIsLoading(false)
       }

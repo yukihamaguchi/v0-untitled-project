@@ -1,3 +1,4 @@
+import React from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { PerformerCard } from "@/components/performer-card"
@@ -48,28 +49,28 @@ export default function EventPage({ params }: EventPageProps) {
   const performers = [
     {
       id: 1,
-      name: "天野 しずく",
+      name: "天野しずく",
       occupation: "声優",
       agency: "ドリームボイス",
       image: "/images/performer-1.jpeg",
     },
     {
       id: 2,
-      name: "早乙女 みなと",
+      name: "早乙女みなと",
       occupation: "声優",
       agency: "ステラボイス",
       image: "/images/performer-2.jpeg",
     },
     {
       id: 3,
-      name: "有栖川 りお",
+      name: "有栖川りお",
       occupation: "声優",
       agency: "ムーンライト",
       image: "/images/performer-3.jpeg",
     },
     {
       id: 4,
-      name: "白石 ほのか",
+      name: "白石ほのか",
       occupation: "声優",
       agency: "サンシャイン",
       image: "/images/performer-4.jpeg",

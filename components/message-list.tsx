@@ -11,6 +11,9 @@ interface Message {
   user: {
     name: string
   }
+  performer: {
+    name: string;
+  }
 }
 
 interface MessageListProps {
@@ -44,7 +47,7 @@ export function MessageList({ eventId, performerId, userId }: MessageListProps) 
     }
 
     fetchMessages()
-  }, [eventId, performerId])
+  }, [eventId, performerId, userId])
 
   if (isLoading) {
     return <div>読み込み中...</div>
@@ -59,19 +62,22 @@ export function MessageList({ eventId, performerId, userId }: MessageListProps) 
     return `${date.getMonth() + 1}/${date.getDate()} ${date.getHours()}:${String(date.getMinutes()).padStart(2, "0")}`
   }
 
+  //Added to filter out messages where the user is also the performer.
+  const filteredMessages = messages.filter(message => message.user.name !== message.performer.name);
+
   return (
     <div className="space-y-4">
-      {messages.map((message) => (
+      {filteredMessages.map((message) => (
         <Card key={message.id} className="overflow-hidden shadow-md">
           <CardContent className="p-4">
             <div className="flex items-start gap-3">
               <Avatar className="h-10 w-10">
-                <AvatarFallback>{message.user.name[0]}</AvatarFallback>
+                <AvatarFallback>{message.performer.name[0]}</AvatarFallback>
               </Avatar>
               <div className="flex-1">
                 <div className="flex justify-between items-start">
                   <div>
-                    <p className="font-medium text-sm">{message.user.name}</p>
+                    <p className="font-medium text-sm">{message.performer.name}</p>
                     <p className="text-xs text-muted-foreground">{formatDate(message.createdAt)}</p>
                   </div>
                   <div className="flex items-center gap-1 bg-primary/10 px-2 py-1 rounded-full">
