@@ -13,9 +13,11 @@ export async function GET(request: Request) {
 
     const giftings = await prisma.gifting.findMany({
       where: {
-        ...(performerId && { performerId: Number(performerId) }),
-        ...(eventId && { eventId: Number(eventId) }),
-        ...(userId && { userId: Number(userId) }),
+        AND: [
+          ...(performerId ? [{ performerId: Number(performerId) }] : []),
+          ...(eventId ? [{ eventId: Number(eventId) }] : []),
+          ...(userId ? [{ userId: Number(userId) }] : []),
+        ],
       },
       include: {
         user: true,

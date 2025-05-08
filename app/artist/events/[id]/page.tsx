@@ -45,7 +45,7 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
     image: "/images/performer-1.jpeg",
   }
 
-  // 仮のイベントデータ
+  // イベントデータ
   const events = {
     "1": {
       id: 1,
@@ -54,8 +54,8 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
       location: "さいたまスーパーアリーナ",
       description: "2025年夏最大の音楽フェスティバル。様々なジャンルのアーティストが集結します。",
       image: "/images/concert.png",
-      totalGifting: 125000,
-      messageCount: 42,
+      totalGifting: 0,
+      messageCount: 0,
     },
     "2": {
       id: 2,
