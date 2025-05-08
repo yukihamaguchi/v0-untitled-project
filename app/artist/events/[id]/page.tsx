@@ -21,7 +21,7 @@ interface EventDetailPageProps {
 
 export default function EventDetailPage({ params }: EventDetailPageProps) {
   const router = useRouter()
-  const eventId = Number.parseInt(React.use(params).id)
+  const eventId = Number.parseInt(params.id)
   const [activeTab, setActiveTab] = useState("messages")
   const [isLoading, setIsLoading] = useState(true)
 
@@ -221,7 +221,7 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
           </TabsList>
 
           <TabsContent value="messages" className="mt-4">
-            <MessageList messages={messages} />
+            <MessageList performerId={artist.id} />
           </TabsContent>
 
           <TabsContent value="stats" className="mt-4">
