@@ -61,8 +61,9 @@ export function TipForm({ eventId, performerId, performerName, paypayId }: TipFo
       })
 
       if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.message || 'Failed to save gifting')
+        const errorData = await response.json()
+        console.error('API Error:', errorData)
+        throw new Error(errorData.details || errorData.error || 'Failed to save gifting')
       }
 
       const paymentInfo = {
