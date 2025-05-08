@@ -8,6 +8,8 @@ export async function POST(request: Request) {
     const body = await request.json()
     const { userId, performerId, eventId, amount, comment } = body
 
+    console.log('Received request body:', body)
+
     // Verify that the referenced records exist
     const [user, performer, event] = await Promise.all([
       prisma.user.findUnique({ where: { id: userId } }),
@@ -15,9 +17,25 @@ export async function POST(request: Request) {
       prisma.event.findUnique({ where: { id: eventId } })
     ])
 
-    if (!user || !performer || !event) {
+    console.log('Found records:', { user, performer, event })
+
+    if (!user) {
       return NextResponse.json(
-        { error: 'Referenced records not found' },
+        { error: 'User not found', details: `User ID ${userId} does not exist` },
+        { status: 404 }
+      )
+    }
+
+    if (!performer) {
+      return NextResponse.json(
+        { error: 'Performer not found', details: `Performer ID ${performerId} does not exist` },
+        { status: 404 }
+      )
+    }
+
+    if (!event) {
+      return NextResponse.json(
+        { error: 'Event not found', details: `Event ID ${eventId} does not exist` },
         { status: 404 }
       )
     }

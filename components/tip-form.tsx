@@ -1,4 +1,3 @@
-
 "use client"
 
 import type React from "react"
@@ -46,24 +45,27 @@ export function TipForm({ eventId, performerId, performerName, paypayId }: TipFo
     setIsSubmitting(true)
 
     try {
+      const data = {
+        userId: 1,
+        performerId: Number(performerId),
+        eventId: Number(eventId),
+        amount: parseInt(amount),
+        comment,
+      }
+      console.log('Submitting data:', data)
+
       const response = await fetch('/api/giftings', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          userId: 1,
-          performerId: Number(performerId),
-          eventId: Number(eventId),
-          amount: parseInt(amount),
-          comment,
-        }),
+        body: JSON.stringify(data),
       })
 
+      const responseData = await response.json()
       if (!response.ok) {
-        const errorData = await response.json()
-        console.error('API Error:', errorData)
-        throw new Error(errorData.details || errorData.error || 'Failed to save gifting')
+        console.error('API Error:', responseData)
+        throw new Error(responseData.details || responseData.error || 'Failed to save gifting')
       }
 
       const paymentInfo = {
@@ -74,7 +76,7 @@ export function TipForm({ eventId, performerId, performerName, paypayId }: TipFo
         comment,
       }
       savePaymentInfo(paymentInfo)
-      
+
       router.push(`/events/${eventId}/performers/${performerId}/thanks`)
     } catch (error) {
       console.error('Error submitting gifting:', error)
