@@ -9,11 +9,18 @@ import { ArtistEventCard } from "@/components/artist-event-card"
 import { ArtistHeader } from "@/components/artist-header"
 import { getUserSession } from "@/utils/auth"
 import { useRouter } from "next/navigation"
+import { getArtistGiftings } from "@/app/actions/gifting-actions"
+import { useToast } from "@/hooks/use-toast"
+import type { GiftingData } from "@/lib/supabase"
 
 export default function ArtistDashboardPage() {
   const router = useRouter()
+  const { toast } = useToast()
   const [activeTab, setActiveTab] = useState("upcoming")
   const [isLoading, setIsLoading] = useState(true)
+  const [totalGifting, setTotalGifting] = useState(0)
+  const [totalMessages, setTotalMessages] = useState(0)
+  const [events, setEvents] = useState<any[]>([])
 
   // 仮のアーティストデータ
   const artist = {
@@ -24,27 +31,16 @@ export default function ArtistDashboardPage() {
     image: "/images/performer-1.jpeg",
   }
 
-  useEffect(() => {
-    // セッション情報を取得
-    const session = getUserSession()
-    if (!session || session.role !== "artist") {
-      // アーティストでない場合はログインページにリダイレクト
-      router.push("/artist/login")
-    } else {
-      setIsLoading(false)
-    }
-  }, [router])
-
   // 仮のイベントデータ
-  const upcomingEvents = [
+  const upcomingEventsData = [
     {
       id: 1,
       title: "サマーフェス2025",
       date: "2025-07-20",
       location: "さいたまスーパーアリーナ",
       image: "/images/concert.png",
-      totalGifting: 125000,
-      messageCount: 42,
+      totalGifting: 0,
+      messageCount: 0,
     },
     {
       id: 2,
@@ -57,15 +53,15 @@ export default function ArtistDashboardPage() {
     },
   ]
 
-  const pastEvents = [
+  const pastEventsData = [
     {
       id: 3,
       title: "生誕祭2025",
       date: "2025-04-15",
       location: "サイエンスホール",
       image: "/images/concert-audience.jpeg",
-      totalGifting: 87500,
-      messageCount: 35,
+      totalGifting: 0,
+      messageCount: 0,
     },
     {
       id: 4,
@@ -73,17 +69,102 @@ export default function ArtistDashboardPage() {
       date: "2024-12-24",
       location: "東京ドームシティホール",
       image: "/images/concert.png",
-      totalGifting: 156000,
-      messageCount: 64,
+      totalGifting: 0,
+      messageCount: 0,
     },
   ]
 
-  // 表示するイベントを選択
-  const events = activeTab === "upcoming" ? upcomingEvents : pastEvents
+  useEffect(() => {
+    // セッション情報を取得
+    const session = getUserSession()
+    if (!session || session.role !== "artist") {
+      // アーティストでない場合はログインページにリダイレクト
+      router.push("/artist/login")
+      return
+    }
 
-  // 合計ギフティング金額を計算
-  const totalGifting = [...upcomingEvents, ...pastEvents].reduce((sum, event) => sum + event.totalGifting, 0)
-  const totalMessages = [...upcomingEvents, ...pastEvents].reduce((sum, event) => sum + event.messageCount, 0)
+    // アーティストのギフティングデータを取得
+    fetchArtistGiftings(session.email)
+  }, [router])
+
+  // アーティストのギフティングデータを取得する関数
+  const fetchArtistGiftings = async (artistId: string) => {
+    try {
+      setIsLoading(true)
+      const result = await getArtistGiftings(`artist-${artist.id}`) // 実際のアプリではアーティストの実際のIDを使用
+
+      if (result.success && result.data) {
+        // ギフティングデータを集計
+        const giftings = result.data as GiftingData[]
+
+        // 合計金額とメッセージ数を計算
+        const total = giftings.reduce((sum, gifting) => sum + gifting.amount, 0)
+        const messageCount = giftings.length
+
+        setTotalGifting(total)
+        setTotalMessages(messageCount)
+
+        // イベントごとにギフティングデータを集計
+        const eventMap = new Map<number, { totalGifting: number; messageCount: number }>()
+
+        giftings.forEach((gifting) => {
+          const eventId = gifting.event_id
+          const current = eventMap.get(eventId) || { totalGifting: 0, messageCount: 0 }
+
+          eventMap.set(eventId, {
+            totalGifting: current.totalGifting + gifting.amount,
+            messageCount: current.messageCount + 1,
+          })
+        })
+
+        // イベントデータを更新
+        const updatedUpcomingEvents = upcomingEventsData.map((event) => {
+          const stats = eventMap.get(event.id)
+          return {
+            ...event,
+            totalGifting: stats?.totalGifting || 0,
+            messageCount: stats?.messageCount || 0,
+          }
+        })
+
+        const updatedPastEvents = pastEventsData.map((event) => {
+          const stats = eventMap.get(event.id)
+          return {
+            ...event,
+            totalGifting: stats?.totalGifting || 0,
+            messageCount: stats?.messageCount || 0,
+          }
+        })
+
+        // 表示するイベントを選択
+        setEvents(activeTab === "upcoming" ? updatedUpcomingEvents : updatedPastEvents)
+      } else {
+        toast({
+          title: "エラー",
+          description: result.error || "ギフティングデータの取得に失敗しました",
+          variant: "destructive",
+        })
+        // エラー時はデフォルトのデータを使用
+        setEvents(activeTab === "upcoming" ? upcomingEventsData : pastEventsData)
+      }
+    } catch (error) {
+      console.error("Error fetching artist giftings:", error)
+      toast({
+        title: "エラー",
+        description: "ギフティングデータの取得中にエラーが発生しました",
+        variant: "destructive",
+      })
+      // エラー時はデフォルトのデータを使用
+      setEvents(activeTab === "upcoming" ? upcomingEventsData : pastEventsData)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // タブ切り替え時の処理
+  useEffect(() => {
+    setEvents(activeTab === "upcoming" ? upcomingEventsData : pastEventsData)
+  }, [activeTab])
 
   if (isLoading) {
     return <div className="flex items-center justify-center min-h-screen">読み込み中...</div>
@@ -128,8 +209,8 @@ export default function ArtistDashboardPage() {
           </div>
 
           <TabsContent value="upcoming" className="space-y-4 mt-2">
-            {upcomingEvents.length > 0 ? (
-              upcomingEvents.map((event) => <ArtistEventCard key={event.id} event={event} />)
+            {events.length > 0 ? (
+              events.map((event) => <ArtistEventCard key={event.id} event={event} />)
             ) : (
               <Card>
                 <CardContent className="py-8 text-center text-muted-foreground">今後のイベントはありません</CardContent>
@@ -138,8 +219,8 @@ export default function ArtistDashboardPage() {
           </TabsContent>
 
           <TabsContent value="past" className="space-y-4 mt-2">
-            {pastEvents.length > 0 ? (
-              pastEvents.map((event) => <ArtistEventCard key={event.id} event={event} />)
+            {events.length > 0 ? (
+              events.map((event) => <ArtistEventCard key={event.id} event={event} />)
             ) : (
               <Card>
                 <CardContent className="py-8 text-center text-muted-foreground">過去のイベントはありません</CardContent>

@@ -7,8 +7,11 @@ import Link from "next/link"
 import { ArrowLeft, BanknoteIcon, CheckCircle } from "lucide-react"
 import { motion } from "framer-motion"
 import { RippleButton } from "@/components/ripple-button"
-import { getPaymentInfo } from "@/utils/payment"
+import { getPaymentInfo, clearPaymentInfo } from "@/utils/payment"
 import { useRouter } from "next/navigation"
+import { saveGifting } from "@/app/actions/gifting-actions"
+import { getUserSession } from "@/utils/auth"
+import { useToast } from "@/hooks/use-toast"
 
 interface ConfirmPageProps {
   params: {
@@ -19,6 +22,7 @@ interface ConfirmPageProps {
 
 export default function ConfirmPage({ params }: ConfirmPageProps) {
   const router = useRouter()
+  const { toast } = useToast()
   const eventId = Number.parseInt(params.id)
   const performerId = Number.parseInt(params.performerId)
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
@@ -43,14 +47,69 @@ export default function ConfirmPage({ params }: ConfirmPageProps) {
     }
   }, [eventId, performerId, router])
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     setIsSubmitting(true)
-    // 少し遅延を入れて、ユーザーに処理中であることを示す
-    setTimeout(() => {
+
+    try {
+      // ユーザーセッションを取得
+      const session = getUserSession()
+      if (!session) {
+        toast({
+          title: "エラー",
+          description: "ログインが必要です",
+          variant: "destructive",
+        })
+        router.push("/login")
+        return
+      }
+
+      // イベント情報を取得（実際のアプリではAPIから取得するか、状態管理で保持する）
+      const events = {
+        "1": { id: 1, title: "サマーフェス2025" },
+        "2": { id: 2, title: "5周年ライブin横アリ" },
+        "3": { id: 3, title: "生誕祭2025" },
+        "4": { id: 4, title: "ウィンターライブ2024" },
+      }
+      const event = events[params.id as keyof typeof events] || { id: eventId, title: "イベント" }
+
+      if (paymentInfo) {
+        // ギフティングデータを保存
+        const result = await saveGifting({
+          user_id: session.email,
+          user_name: session.name,
+          artist_id: `artist-${performerId}`, // 実際のアプリではアーティストの実際のIDを使用
+          artist_name: paymentInfo.performerName,
+          event_id: eventId,
+          event_name: event.title,
+          amount: Number.parseInt(paymentInfo.amount),
+          comment: paymentInfo.comment || undefined,
+        })
+
+        if (!result.success) {
+          toast({
+            title: "エラー",
+            description: result.error || "ギフティングの保存に失敗しました",
+            variant: "destructive",
+          })
+          setIsSubmitting(false)
+          return
+        }
+
+        // 支払い情報をクリア
+        clearPaymentInfo()
+
+        // 完了画面に遷移
+        router.push(`/events/${eventId}/performers/${performerId}/thanks`)
+      }
+    } catch (error) {
+      console.error("Error saving gifting:", error)
+      toast({
+        title: "エラー",
+        description: "ギフティングの処理中にエラーが発生しました",
+        variant: "destructive",
+      })
       setIsSubmitting(false)
-      // 完了画面に遷移
-      router.push(`/events/${eventId}/performers/${performerId}/thanks`)
-    }, 1000)
+    }
   }
 
   if (!paymentInfo) {

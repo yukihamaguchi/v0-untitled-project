@@ -8,14 +8,20 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { LogOut, Settings } from "lucide-react"
 import { clearUserSession, getUserSession } from "@/utils/auth"
 import { useRouter } from "next/navigation"
+import { getUserGiftings } from "../actions/gifting-actions"
+import { useToast } from "@/hooks/use-toast"
+import type { GiftingData } from "@/lib/supabase"
 
 export default function ProfilePage() {
   const router = useRouter()
+  const { toast } = useToast()
   const [user, setUser] = useState({
     name: "ユーザー",
     email: "user@example.com",
     avatar: "/placeholder.svg?height=100&width=100",
   })
+  const [tipHistory, setTipHistory] = useState<any[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     // セッション情報を取得
@@ -26,42 +32,59 @@ export default function ProfilePage() {
         email: session.email,
         avatar: "/placeholder.svg?height=100&width=100",
       })
+
+      // ギフティング履歴を取得
+      fetchGiftingHistory(session.email)
     } else {
       // ログインしていない場合はログインページにリダイレクト
       router.push("/login")
     }
   }, [router])
 
+  // ギフティング履歴を取得する関数
+  const fetchGiftingHistory = async (userId: string) => {
+    try {
+      setIsLoading(true)
+      const result = await getUserGiftings(userId)
+
+      if (result.success && result.data) {
+        // データをTipHistoryCardで表示できる形式に変換
+        const formattedHistory = result.data.map((gifting: GiftingData) => ({
+          id: gifting.id || 0,
+          performer: gifting.artist_name,
+          event: gifting.event_name,
+          amount: gifting.amount,
+          date: gifting.created_at || new Date().toISOString(),
+        }))
+
+        setTipHistory(formattedHistory)
+      } else {
+        toast({
+          title: "エラー",
+          description: result.error || "ギフティング履歴の取得に失敗しました",
+          variant: "destructive",
+        })
+        // エラー時は空の配列をセット
+        setTipHistory([])
+      }
+    } catch (error) {
+      console.error("Error fetching gifting history:", error)
+      toast({
+        title: "エラー",
+        description: "ギフティング履歴の取得中にエラーが発生しました",
+        variant: "destructive",
+      })
+      setTipHistory([])
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   // ログアウト処理
   const handleLogout = () => {
     clearUserSession()
     router.push("/login")
   }
-
-  // 仮のギフティング履歴
-  const tipHistory = [
-    {
-      id: 1,
-      performer: "天野 しずく",
-      event: "サマーフェス2025",
-      amount: 1000,
-      date: "2023-07-15",
-    },
-    {
-      id: 2,
-      performer: "早乙女 みなと",
-      event: "5周年ライブin横アリ",
-      amount: 3000,
-      date: "2023-12-24",
-    },
-    {
-      id: 3,
-      performer: "有栖川 りお",
-      event: "生誕祭2025",
-      amount: 5000,
-      date: "2024-04-10",
-    },
-  ]
 
   return (
     <div className="space-y-5">
@@ -101,7 +124,13 @@ export default function ProfilePage() {
 
       <div>
         <h2 className="text-lg font-bold mb-3">ギフティング履歴</h2>
-        <TipHistoryCard tipHistory={tipHistory} />
+        {isLoading ? (
+          <Card>
+            <CardContent className="py-8 text-center text-muted-foreground">読み込み中...</CardContent>
+          </Card>
+        ) : (
+          <TipHistoryCard tipHistory={tipHistory} />
+        )}
       </div>
     </div>
   )
