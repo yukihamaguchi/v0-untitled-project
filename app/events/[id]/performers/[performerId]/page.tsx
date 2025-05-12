@@ -1,4 +1,3 @@
-import React from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { TipForm } from "@/components/tip-form"
@@ -15,9 +14,8 @@ interface PerformerPageProps {
 }
 
 export default function PerformerPage({ params }: PerformerPageProps) {
-  const resolvedParams = React.use(params)
-  const eventId = Number.parseInt(resolvedParams.id)
-  const performerId = Number.parseInt(resolvedParams.performerId)
+  const eventId = Number.parseInt(params.id)
+  const performerId = Number.parseInt(params.performerId)
 
   // 仮のイベントデータ
   const event = {

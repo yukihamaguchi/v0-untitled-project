@@ -15,6 +15,7 @@ export default function ArtistDashboardPage() {
   const [activeTab, setActiveTab] = useState("upcoming")
   const [isLoading, setIsLoading] = useState(true)
 
+  // 仮のアーティストデータ
   const artist = {
     id: 1,
     name: "天野 しずく",
@@ -22,30 +23,6 @@ export default function ArtistDashboardPage() {
     agency: "ドリームボイス",
     image: "/images/performer-1.jpeg",
   }
-
-  const [stats, setStats] = useState({
-    totalGifting: 0,
-    totalMessages: 0,
-    upcomingEvents: [],
-    pastEvents: [],
-  })
-
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const response = await fetch(`/api/giftings/stats?performerId=${artist.id}`)
-        if (!response.ok) throw new Error('Failed to fetch stats')
-        const data = await response.json()
-        setStats(data)
-      } catch (error) {
-        console.error('Error fetching stats:', error)
-      }
-    }
-    fetchStats()
-  }, [artist.id])
-
-  const upcomingEvents = stats.upcomingEvents
-  const pastEvents = stats.pastEvents
 
   useEffect(() => {
     // セッション情報を取得
@@ -58,9 +35,55 @@ export default function ArtistDashboardPage() {
     }
   }, [router])
 
+  // 仮のイベントデータ
+  const upcomingEvents = [
+    {
+      id: 1,
+      title: "サマーフェス2025",
+      date: "2025-07-20",
+      location: "さいたまスーパーアリーナ",
+      image: "/images/concert.png",
+      totalGifting: 125000,
+      messageCount: 42,
+    },
+    {
+      id: 2,
+      title: "5周年ライブin横アリ",
+      date: "2025-07-26",
+      location: "横浜アリーナ",
+      image: "/images/concert-lights.jpeg",
+      totalGifting: 0,
+      messageCount: 0,
+    },
+  ]
+
+  const pastEvents = [
+    {
+      id: 3,
+      title: "生誕祭2025",
+      date: "2025-04-15",
+      location: "サイエンスホール",
+      image: "/images/concert-audience.jpeg",
+      totalGifting: 87500,
+      messageCount: 35,
+    },
+    {
+      id: 4,
+      title: "ウィンターライブ2024",
+      date: "2024-12-24",
+      location: "東京ドームシティホール",
+      image: "/images/concert.png",
+      totalGifting: 156000,
+      messageCount: 64,
+    },
+  ]
+
+  // 表示するイベントを選択
+  const events = activeTab === "upcoming" ? upcomingEvents : pastEvents
+
   // 合計ギフティング金額を計算
-  const totalGifting = stats.totalGifting
-  const totalMessages = stats.totalMessages
+  const totalGifting = [...upcomingEvents, ...pastEvents].reduce((sum, event) => sum + event.totalGifting, 0)
+  const totalMessages = [...upcomingEvents, ...pastEvents].reduce((sum, event) => sum + event.messageCount, 0)
 
   if (isLoading) {
     return <div className="flex items-center justify-center min-h-screen">読み込み中...</div>

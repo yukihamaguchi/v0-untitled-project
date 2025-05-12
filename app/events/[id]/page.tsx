@@ -1,4 +1,3 @@
-import React from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { PerformerCard } from "@/components/performer-card"
@@ -13,7 +12,7 @@ interface EventPageProps {
 }
 
 export default function EventPage({ params }: EventPageProps) {
-  const eventId = Number.parseInt(React.use(params).id)
+  const eventId = Number.parseInt(params.id)
 
   // イベントデータ
   const events = {
@@ -43,34 +42,34 @@ export default function EventPage({ params }: EventPageProps) {
     },
   }
 
-  const event = events[React.use(params).id as keyof typeof events] || events["1"]
+  const event = events[params.id as keyof typeof events] || events["1"]
 
   // 出演者データ
   const performers = [
     {
       id: 1,
-      name: "天野しずく",
+      name: "天野 しずく",
       occupation: "声優",
       agency: "ドリームボイス",
       image: "/images/performer-1.jpeg",
     },
     {
       id: 2,
-      name: "早乙女みなと",
+      name: "早乙女 みなと",
       occupation: "声優",
       agency: "ステラボイス",
       image: "/images/performer-2.jpeg",
     },
     {
       id: 3,
-      name: "有栖川りお",
+      name: "有栖川 りお",
       occupation: "声優",
       agency: "ムーンライト",
       image: "/images/performer-3.jpeg",
     },
     {
       id: 4,
-      name: "白石ほのか",
+      name: "白石 ほのか",
       occupation: "声優",
       agency: "サンシャイン",
       image: "/images/performer-4.jpeg",

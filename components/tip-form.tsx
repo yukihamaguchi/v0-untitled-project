@@ -1,6 +1,7 @@
 "use client"
 
 import type React from "react"
+
 import { useState } from "react"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -11,7 +12,7 @@ import { useRouter } from "next/navigation"
 import { BanknoteIcon, SendIcon } from "lucide-react"
 import { motion } from "framer-motion"
 import { RippleButton } from "./ripple-button"
-import { generatePayPayLink, savePaymentInfo } from "@/utils/payment"
+import { savePaymentInfo } from "@/utils/payment"
 
 interface TipFormProps {
   eventId: number
@@ -29,6 +30,7 @@ export function TipForm({ eventId, performerId, performerName, paypayId }: TipFo
 
   const tipAmounts = ["100", "500", "1000", "3000", "5000", "10000"]
 
+  // 絵文字が含まれているかチェック
   const checkForEmoji = (text: string) => {
     const hasEmoji = /[\uD800-\uDBFF][\uDC00-\uDFFF]/g.test(text)
     setShowEmojiWarning(hasEmoji)
@@ -44,44 +46,22 @@ export function TipForm({ eventId, performerId, performerName, paypayId }: TipFo
     e.preventDefault()
     setIsSubmitting(true)
 
-    try {
-      const data = {
-        userId: 1,
-        performerId: Number(performerId),
-        eventId: Number(eventId),
-        amount: parseInt(amount),
-        comment,
-      }
-      console.log('Submitting data:', data)
-
-      const response = await fetch('/api/giftings', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      })
-
-      const responseData = await response.json()
-      if (!response.ok) {
-        console.error('API Error:', responseData)
-        throw new Error(responseData.details || responseData.error || 'Failed to save gifting')
-      }
-
-      const paymentInfo = {
-        eventId,
-        performerId,
-        performerName,
-        amount,
-        comment,
-      }
-      savePaymentInfo(paymentInfo)
-
-      router.push(`/events/${eventId}/performers/${performerId}/thanks`)
-    } catch (error) {
-      console.error('Error submitting gifting:', error)
-      setIsSubmitting(false)
+    // 支払い情報をローカルストレージに保存
+    const paymentInfo = {
+      eventId,
+      performerId,
+      performerName,
+      amount,
+      comment,
     }
+    savePaymentInfo(paymentInfo)
+
+    // 少し遅延を入れて、ユーザーに処理中であることを示す
+    setTimeout(() => {
+      setIsSubmitting(false)
+      // 確認画面に遷移
+      router.push(`/events/${eventId}/performers/${performerId}/confirm`)
+    }, 500)
   }
 
   return (
@@ -137,12 +117,17 @@ export function TipForm({ eventId, performerId, performerName, paypayId }: TipFo
                 className="resize-none mt-1 text-sm"
                 rows={3}
               />
+              {showEmojiWarning && (
+                <p className="text-xs text-amber-500 mt-1">
+                  絵文字はサポートされていません。テキストのみを入力してください。
+                </p>
+              )}
             </div>
           </CardContent>
           <CardFooter className="bg-muted/20 border-t p-3">
             <RippleButton type="submit" className="w-full gap-1 rounded-full h-9 text-sm" disabled={isSubmitting}>
               <SendIcon className="h-3 w-3" />
-              {isSubmitting ? "処理中..." : "ギフティングする"}
+              {isSubmitting ? "処理中..." : "確認画面へ"}
             </RippleButton>
           </CardFooter>
         </form>

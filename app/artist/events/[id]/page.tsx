@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
@@ -21,7 +21,7 @@ interface EventDetailPageProps {
 
 export default function EventDetailPage({ params }: EventDetailPageProps) {
   const router = useRouter()
-  const eventId = Number.parseInt(React.use(params).id)
+  const eventId = Number.parseInt(params.id)
   const [activeTab, setActiveTab] = useState("messages")
   const [isLoading, setIsLoading] = useState(true)
 
@@ -45,7 +45,7 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
     image: "/images/performer-1.jpeg",
   }
 
-  // イベントデータ
+  // 仮のイベントデータ
   const events = {
     "1": {
       id: 1,
@@ -54,8 +54,8 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
       location: "さいたまスーパーアリーナ",
       description: "2025年夏最大の音楽フェスティバル。様々なジャンルのアーティストが集結します。",
       image: "/images/concert.png",
-      totalGifting: 0,
-      messageCount: 0,
+      totalGifting: 125000,
+      messageCount: 42,
     },
     "2": {
       id: 2,
@@ -89,7 +89,7 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
     },
   }
 
-  const event = events[React.use(params).id as keyof typeof events] || events["1"]
+  const event = events[params.id as keyof typeof events] || events["1"]
 
   // 仮のメッセージデータ
   const messages = [
@@ -221,7 +221,7 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
           </TabsList>
 
           <TabsContent value="messages" className="mt-4">
-            <MessageList performerId={artist.id} />
+            <MessageList messages={messages} />
           </TabsContent>
 
           <TabsContent value="stats" className="mt-4">
