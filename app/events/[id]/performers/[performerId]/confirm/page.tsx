@@ -7,7 +7,7 @@ import Link from "next/link"
 import { ArrowLeft, BanknoteIcon, CheckCircle } from "lucide-react"
 import { motion } from "framer-motion"
 import { RippleButton } from "@/components/ripple-button"
-import { getPaymentInfo, clearPaymentInfo } from "@/utils/payment"
+import { getPaymentInfo } from "@/utils/payment"
 import { useRouter } from "next/navigation"
 import { saveGifting } from "@/app/actions/gifting-actions"
 import { getUserSession } from "@/utils/auth"
@@ -48,6 +48,7 @@ export default function ConfirmPage({ params }: ConfirmPageProps) {
   }, [eventId, performerId, router])
 
   const handleConfirm = async () => {
+    if (isSubmitting) return // 二重送信防止
     setIsSubmitting(true)
 
     try {
@@ -95,11 +96,13 @@ export default function ConfirmPage({ params }: ConfirmPageProps) {
           return
         }
 
-        // 支払い情報をクリア
-        clearPaymentInfo()
-
-        // 完了画面に遷移
-        router.push(`/events/${eventId}/performers/${performerId}/thanks`)
+        // 完了画面に遷移する前に少し遅延を入れる
+        setTimeout(() => {
+          // 完了画面に遷移
+          const thanksUrl = `/events/${eventId}/performers/${performerId}/thanks`
+          console.log("Navigating to:", thanksUrl)
+          router.push(thanksUrl)
+        }, 500)
       }
     } catch (error) {
       console.error("Error saving gifting:", error)

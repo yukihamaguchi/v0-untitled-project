@@ -7,7 +7,7 @@ import Link from "next/link"
 import { CheckCircle, BanknoteIcon } from "lucide-react"
 import { motion } from "framer-motion"
 import { RippleButton } from "@/components/ripple-button"
-import { getPaymentInfo, clearPaymentInfo } from "@/utils/payment"
+import { clearPaymentInfo, getPaymentInfo } from "@/utils/payment"
 
 interface ThanksPageProps {
   params: {
