@@ -70,7 +70,7 @@ export default function PDFPage({ params }: PDFPageProps) {
       const pdf = new jsPDF({
         orientation: "portrait",
         unit: "mm",
-        format: "a4",
+        format: [210, 210], // Square format
       })
 
       // 各メッセージページをPDFに追加
@@ -86,7 +86,6 @@ export default function PDFPage({ params }: PDFPageProps) {
         tempDiv.style.backgroundColor = "#FFFFFF"
         tempDiv.className = "relative"
 
-        // ページサイズに応じた表示エリアのスタイルを取得
         const getWritableAreaStyle = () => {
           switch (message.page_size) {
             case "quarter":
@@ -99,7 +98,6 @@ export default function PDFPage({ params }: PDFPageProps) {
           }
         }
 
-        // フレームエリアのスタイルを取得
         const getFrameAreaStyle = () => {
           switch (message.page_size) {
             case "quarter":
@@ -112,7 +110,6 @@ export default function PDFPage({ params }: PDFPageProps) {
           }
         }
 
-        // フレーム画像のパスを取得
         const getFrameImage = () => {
           switch (message.frame_type) {
             case "flower":
@@ -167,7 +164,7 @@ export default function PDFPage({ params }: PDFPageProps) {
 
         const imgData = canvas.toDataURL("image/png")
         const imgWidth = 180
-        const imgHeight = (canvas.height * imgWidth) / canvas.width
+        const imgHeight = 180 // Square aspect ratio
 
         if (i > 0) {
           pdf.addPage()
