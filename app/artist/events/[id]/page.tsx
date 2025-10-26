@@ -8,7 +8,7 @@ import { ArrowLeftIcon, CalendarIcon, DownloadIcon, MapPinIcon, ShareIcon } from
 import Image from "next/image"
 import Link from "next/link"
 import { ArtistHeader } from "@/components/artist-header"
-import { MessageList } from "@/components/message-list"
+import { DigitalBookViewer } from "@/components/digital-book-viewer"
 import { GiftingStats } from "@/components/gifting-stats"
 import { getUserSession } from "@/utils/auth"
 import { useRouter } from "next/navigation"
@@ -28,7 +28,7 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
   const eventId = Number.parseInt(params.id)
   const [activeTab, setActiveTab] = useState("messages")
   const [isLoading, setIsLoading] = useState(true)
-  const [messages, setMessages] = useState<any[]>([])
+  const [messages, setMessages] = useState<GiftingData[]>([])
   const [giftingData, setGiftingData] = useState<any>({
     totalAmount: 0,
     averageAmount: 0,
@@ -39,19 +39,15 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
   })
 
   useEffect(() => {
-    // セッション情報を取得
     const session = getUserSession()
     if (!session || session.role !== "artist") {
-      // アーティストでない場合はログインページにリダイレクト
       router.push("/artist/login")
       return
     }
 
-    // イベントのギフティングデータを取得
     fetchEventGiftings(eventId)
   }, [eventId, router])
 
-  // イベントのギフティングデータを取得する関数
   const fetchEventGiftings = async (eventId: number) => {
     try {
       setIsLoading(true)
@@ -60,24 +56,13 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
       if (result.success && result.data) {
         const giftings = result.data as GiftingData[]
 
-        // メッセージリストを作成
-        const messageList = giftings.map((gifting) => ({
-          id: gifting.id || 0,
-          userName: gifting.user_name,
-          message: gifting.comment || "メッセージなし",
-          amount: gifting.amount,
-          date: gifting.created_at || new Date().toISOString(),
-        }))
+        setMessages(giftings)
 
-        setMessages(messageList)
-
-        // ギフティング統計データを作成
         const totalAmount = giftings.reduce((sum, gifting) => sum + gifting.amount, 0)
         const messageCount = giftings.length
         const averageAmount = messageCount > 0 ? Math.round(totalAmount / messageCount) : 0
         const topAmount = messageCount > 0 ? Math.max(...giftings.map((g) => g.amount)) : 0
 
-        // 時間帯別データを作成（実際のアプリではより詳細な集計が必要）
         const timeMap = new Map<string, number>()
         giftings.forEach((gifting) => {
           if (gifting.created_at) {
@@ -94,7 +79,6 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
           amount,
         }))
 
-        // 金額別データを作成
         const categoryMap = new Map<string, number>()
         giftings.forEach((gifting) => {
           let category
@@ -145,7 +129,6 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
           description: result.error || "ギフティングデータの取得に失敗しました",
           variant: "destructive",
         })
-        // エラー時はデフォルトのデータを使用
         setMessages([])
       }
     } catch (error) {
@@ -155,14 +138,12 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
         description: "ギフティングデータの取得中にエラーが発生しました",
         variant: "destructive",
       })
-      // エラー時はデフォルトのデータを使用
       setMessages([])
     } finally {
       setIsLoading(false)
     }
   }
 
-  // 仮のアーティストデータ
   const artist = {
     id: 1,
     name: "天野 しずく",
@@ -171,7 +152,6 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
     image: "/images/performer-1.jpeg",
   }
 
-  // 仮のイベントデータ
   const events = {
     "1": {
       id: 1,
@@ -180,8 +160,8 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
       location: "さいたまスーパーアリーナ",
       description: "2025年夏最大の音楽フェスティバル。様々なジャンルのアーティストが集結します。",
       image: "/images/concert.png",
-      totalGifting: giftingData.totalAmount,
-      messageCount: giftingData.messageCount,
+      totalGifting: 0,
+      messageCount: 0,
     },
     "2": {
       id: 2,
@@ -190,8 +170,8 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
       location: "横浜アリーナ",
       description: "デビュー5周年を記念した特別ライブイベント。豪華ゲストも多数出演予定。",
       image: "/images/concert-lights.jpeg",
-      totalGifting: giftingData.totalAmount,
-      messageCount: giftingData.messageCount,
+      totalGifting: 0,
+      messageCount: 0,
     },
     "3": {
       id: 3,
@@ -200,8 +180,8 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
       location: "サイエンスホール",
       description: "アーティスト生誕を祝う特別なイベント。ファン感謝祭としても位置づけられています。",
       image: "/images/concert-audience.jpeg",
-      totalGifting: giftingData.totalAmount,
-      messageCount: giftingData.messageCount,
+      totalGifting: 0,
+      messageCount: 0,
     },
     "4": {
       id: 4,
@@ -210,8 +190,8 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
       location: "東京ドームシティホール",
       description: "クリスマスイブに開催される特別なライブイベント。",
       image: "/images/concert.png",
-      totalGifting: giftingData.totalAmount,
-      messageCount: giftingData.messageCount,
+      totalGifting: 0,
+      messageCount: 0,
     },
   }
 
@@ -287,7 +267,7 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
           </TabsList>
 
           <TabsContent value="messages" className="mt-4">
-            <MessageList messages={messages} />
+            <DigitalBookViewer messages={messages} eventId={eventId} />
           </TabsContent>
 
           <TabsContent value="stats" className="mt-4">

@@ -1,7 +1,6 @@
 "use client"
 
 import { EventCard } from "@/components/event-card"
-import { motion } from "framer-motion"
 
 export default function Home() {
   // 仮のイベントデータ
@@ -31,14 +30,7 @@ export default function Home() {
 
   return (
     <div className="space-y-5">
-      <motion.h1
-        className="text-xl font-bold"
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-      >
-        イベント一覧
-      </motion.h1>
+      <h1 className="text-xl font-bold">イベント一覧</h1>
 
       <div className="space-y-6">
         {events.map((event, index) => (

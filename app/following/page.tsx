@@ -3,7 +3,6 @@
 import { EventCard } from "@/components/event-card"
 import { PerformerCard } from "@/components/performer-card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { motion } from "framer-motion"
 
 export default function FollowingPage() {
   // フォロー中の出演者データ
@@ -61,20 +60,9 @@ export default function FollowingPage() {
 
   return (
     <div className="space-y-5">
-      <motion.h1
-        className="text-xl font-bold"
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-      >
-        フォロー中
-      </motion.h1>
+      <h1 className="text-xl font-bold">フォロー中</h1>
 
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.1 }}
-      >
+      <div>
         <Tabs defaultValue="events">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="events">イベント</TabsTrigger>
@@ -101,7 +89,7 @@ export default function FollowingPage() {
             </div>
           </TabsContent>
         </Tabs>
-      </motion.div>
+      </div>
     </div>
   )
 }

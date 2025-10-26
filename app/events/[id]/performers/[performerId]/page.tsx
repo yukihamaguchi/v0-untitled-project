@@ -1,3 +1,6 @@
+"use client"
+
+import { useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { TipForm } from "@/components/tip-form"
@@ -5,6 +8,9 @@ import Image from "next/image"
 import Link from "next/link"
 import { ChevronLeft, Heart } from "lucide-react"
 import type { Performer } from "@/types/performer"
+import { getUserSession } from "@/utils/auth"
+import { useRouter } from "next/navigation"
+import { useToast } from "@/hooks/use-toast"
 
 interface PerformerPageProps {
   params: {
@@ -14,8 +20,22 @@ interface PerformerPageProps {
 }
 
 export default function PerformerPage({ params }: PerformerPageProps) {
+  const router = useRouter()
+  const { toast } = useToast()
   const eventId = Number.parseInt(params.id)
   const performerId = Number.parseInt(params.performerId)
+
+  useEffect(() => {
+    const session = getUserSession()
+    if (session && session.role === "artist") {
+      toast({
+        title: "アクセス制限",
+        description: "アーティストはギフティングを送信できません",
+        variant: "destructive",
+      })
+      router.push("/artist/dashboard")
+    }
+  }, [router, toast])
 
   // 仮のイベントデータ
   const event = {
@@ -95,7 +115,7 @@ export default function PerformerPage({ params }: PerformerPageProps) {
                 {performer.occupation}（{performer.agency}）
               </span>
             </div>
-            <Button variant="outline" size="sm" className="gap-1 rounded-full text-xs h-8">
+            <Button variant="outline" size="sm" className="gap-1 rounded-full text-xs h-8 bg-transparent">
               <Heart className={`h-3 w-3 ${performer.isFollowing ? "fill-primary text-primary" : ""}`} />
               {performer.isFollowing ? "フォロー中" : "フォローする"}
             </Button>

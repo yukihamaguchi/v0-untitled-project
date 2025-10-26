@@ -31,5 +31,10 @@ export interface GiftingData {
   event_name: string
   amount: number
   comment?: string
+  page_size?: string // 'full' | 'half' | 'quarter'
+  frame_type?: string // 'none' | 'colorful' | 'yellow-green' | 'pastel'
+  frame_points?: number
+  stamps?: string[] | null // Array of stamp emojis or null
+  stamp_points?: number
   created_at?: string
 }

@@ -7,10 +7,8 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Slider } from "@/components/ui/slider"
 import { useRouter } from "next/navigation"
-import { BanknoteIcon, SendIcon } from "lucide-react"
-import { motion } from "framer-motion"
+import { BanknoteIcon, SendIcon, BookOpenIcon, SparklesIcon, FrameIcon } from "lucide-react"
 import { RippleButton } from "./ripple-button"
 import { savePaymentInfo } from "@/utils/payment"
 
@@ -21,138 +19,132 @@ interface TipFormProps {
   paypayId: string
 }
 
-// スライダーの値を実際の金額に変換する関数
-const sliderValueToAmount = (value: number): number => {
-  if (value === 0) return 0
-  return 1000 + (value - 1) * 100
-}
+const PAGE_SIZES = [
+  { value: "full", label: "1ページ", description: "150文字まで", maxLength: 150 },
+  { value: "half", label: "1/2ページ", description: "64文字まで", maxLength: 64 },
+  { value: "quarter", label: "1/4ページ", description: "20文字まで", maxLength: 20 },
+] as const
 
-// 金額をスライダーの値に変換する関数
-const amountToSliderValue = (amount: number): number => {
-  if (amount === 0) return 0
-  return Math.floor((amount - 1000) / 100) + 1
-}
+const FRAMES = [
+  {
+    value: "none",
+    label: "フレームなし",
+    points: 0,
+    image: null,
+  },
+  {
+    value: "flower",
+    label: "フラワーフレーム",
+    points: 500,
+    image: "/images/frame-flower.png",
+  },
+  {
+    value: "autumn",
+    label: "オータムフレーム",
+    points: 500,
+    image: "/images/frame-autumn.png",
+  },
+] as const
 
-// 金額に応じた色とラベルを取得する関数
-const getAmountStyle = (amount: number) => {
-  if (amount >= 10000) {
-    return {
-      backgroundColor: "rgb(239 68 68)", // red-500
-      borderColor: "rgb(220 38 38)", // red-600
-      textColor: "text-white",
-      label: "¥10,000+",
-      gradient: "from-red-500 to-red-600",
-      cardGradient: "from-red-50 to-red-100",
-      headerBg: "bg-red-500/20",
-      footerBg: "bg-red-500/10",
-    }
-  } else if (amount >= 5000) {
-    return {
-      backgroundColor: "rgb(236 72 153)", // pink-500 (マゼンダ)
-      borderColor: "rgb(219 39 119)", // pink-600
-      textColor: "text-white",
-      label: "¥5,000+",
-      gradient: "from-pink-500 to-pink-600",
-      cardGradient: "from-pink-50 to-pink-100",
-      headerBg: "bg-pink-500/20",
-      footerBg: "bg-pink-500/10",
-    }
-  } else if (amount >= 2000) {
-    return {
-      backgroundColor: "rgb(249 115 22)", // orange-500
-      borderColor: "rgb(234 88 12)", // orange-600
-      textColor: "text-white",
-      label: "¥2,000+",
-      gradient: "from-orange-500 to-orange-600",
-      cardGradient: "from-orange-50 to-orange-100",
-      headerBg: "bg-orange-500/20",
-      footerBg: "bg-orange-500/10",
-    }
-  } else if (amount >= 1000) {
-    return {
-      backgroundColor: "rgb(234 179 8)", // yellow-500
-      borderColor: "rgb(202 138 4)", // yellow-600
-      textColor: "text-black",
-      label: "¥1,000+",
-      gradient: "from-yellow-400 to-yellow-500",
-      cardGradient: "from-yellow-50 to-yellow-100",
-      headerBg: "bg-yellow-500/20",
-      footerBg: "bg-yellow-500/10",
-    }
-  } else {
-    return {
-      backgroundColor: "rgb(255 255 255)", // white
-      borderColor: "rgb(229 231 235)", // gray-200
-      textColor: "text-gray-800",
-      label: "無料",
-      gradient: "from-gray-50 to-white",
-      cardGradient: "from-gray-50 to-white",
-      headerBg: "bg-primary/5",
-      footerBg: "bg-muted/20",
-    }
-  }
-}
+const STAMPS = [
+  { emoji: "👏", label: "拍手", points: 500 },
+  { emoji: "⭐", label: "スター", points: 1000 },
+  { emoji: "❤️", label: "ハート", points: 2000 },
+  { emoji: "🎉", label: "クラッカー", points: 5000 },
+] as const
 
 export function TipForm({ eventId, performerId, performerName, paypayId }: TipFormProps) {
   const router = useRouter()
-  // スライダーの値（0から191まで）
-  const [sliderValue, setSliderValue] = useState<number>(0)
+  const [pageSize, setPageSize] = useState<string>("full")
+  const [selectedFrame, setSelectedFrame] = useState<string>("none")
   const [comment, setComment] = useState<string>("")
+  const [selectedStamps, setSelectedStamps] = useState<string[]>([])
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
 
-  // スライダーの値の範囲
-  // 0 = 0円, 1 = 1000円, 2 = 1100円, ..., 191 = 20000円
-  const maxSliderValue = 191 // 20000円に対応
-  const minSliderValue = 0
+  const stampPoints = selectedStamps.reduce((total, stampEmoji) => {
+    const stamp = STAMPS.find((s) => s.emoji === stampEmoji)
+    return total + (stamp?.points || 0)
+  }, 0)
 
-  // 実際の金額を計算
-  const amount = sliderValueToAmount(sliderValue)
-
-  // 金額のスタイルを取得
-  const amountStyle = getAmountStyle(amount)
-
-  const handleSliderChange = (value: number[]) => {
-    setSliderValue(value[0])
-  }
+  const selectedFrameData = FRAMES.find((f) => f.value === selectedFrame) || FRAMES[0]
+  const totalAmount = stampPoints + selectedFrameData.points
+  const currentPageSize = PAGE_SIZES.find((s) => s.value === pageSize) || PAGE_SIZES[0]
 
   const handleCommentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newComment = e.target.value
     setComment(newComment)
   }
 
+  const toggleStamp = (stampEmoji: string) => {
+    setSelectedStamps((prev) => {
+      if (prev.includes(stampEmoji)) {
+        return prev.filter((s) => s !== stampEmoji)
+      } else {
+        return [...prev, stampEmoji]
+      }
+    })
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
 
-    // 支払い情報をローカルストレージに保存
     const paymentInfo = {
       eventId,
       performerId,
       performerName,
-      amount: amount.toString(),
+      amount: totalAmount.toString(),
       comment,
+      pageSize,
+      frameType: selectedFrame,
+      framePoints: selectedFrameData.points,
+      stamps: selectedStamps,
+      stampPoints,
     }
     savePaymentInfo(paymentInfo)
 
-    // 少し遅延を入れて、ユーザーに処理中であることを示す
     setTimeout(() => {
       setIsSubmitting(false)
-      // 確認画面に遷移
       router.push(`/events/${eventId}/performers/${performerId}/confirm`)
     }, 500)
   }
 
+  const getFrameArea = () => {
+    switch (pageSize) {
+      case "full":
+        return { width: "calc(100% - 48px)", height: "calc(100% - 48px)", top: "24px", left: "24px" }
+      case "half":
+        return { width: "calc(100% - 48px)", height: "calc(50% - 36px)", top: "24px", left: "24px" }
+      case "quarter":
+        return { width: "calc(50% - 36px)", height: "calc(50% - 36px)", top: "24px", left: "24px" }
+      default:
+        return { width: "calc(100% - 48px)", height: "calc(100% - 48px)", top: "24px", left: "24px" }
+    }
+  }
+
+  const getWritableArea = () => {
+    switch (pageSize) {
+      case "full":
+        return { width: "calc(100% - 96px)", height: "calc(100% - 96px)", top: "48px", left: "48px" }
+      case "half":
+        return { width: "calc(100% - 96px)", height: "calc(50% - 72px)", top: "48px", left: "48px" }
+      case "quarter":
+        return { width: "calc(50% - 72px)", height: "calc(50% - 72px)", top: "48px", left: "48px" }
+      default:
+        return { width: "calc(100% - 96px)", height: "calc(100% - 96px)", top: "48px", left: "48px" }
+    }
+  }
+
+  const frameArea = getFrameArea()
+  const writableArea = getWritableArea()
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: 0.2 }}
-    >
-      <Card className={`overflow-hidden border-none shadow-lg bg-gradient-to-br ${amountStyle.cardGradient}`}>
-        <CardHeader className={`${amountStyle.headerBg} border-b border-primary/10 py-3 px-4`}>
+    <div>
+      <Card className="overflow-hidden border-none shadow-lg bg-gradient-to-br from-background to-primary/5">
+        <CardHeader className="bg-primary/5 border-b border-primary/10 py-3 px-4">
           <CardTitle className="flex items-center gap-1 text-base">
-            <BanknoteIcon className="h-4 w-4 text-primary" />
-            ギフティングを送る
+            <BookOpenIcon className="h-4 w-4 text-primary" />
+            デジタルメッセージブックを送る
           </CardTitle>
         </CardHeader>
         <form onSubmit={handleSubmit}>
@@ -165,84 +157,185 @@ export function TipForm({ eventId, performerId, performerName, paypayId }: TipFo
             </div>
 
             <div>
-              <Label htmlFor="amount" className="text-xs font-medium mb-2 block">
-                金額: ¥{amount.toLocaleString()}
+              <Label className="text-xs font-medium mb-2 block">ページサイズ</Label>
+              <div className="grid grid-cols-3 gap-2">
+                {PAGE_SIZES.map((size) => (
+                  <button
+                    key={size.value}
+                    type="button"
+                    onClick={() => setPageSize(size.value)}
+                    className={`p-3 rounded-lg border-2 transition-all ${
+                      pageSize === size.value
+                        ? "border-primary bg-primary/10 shadow-md"
+                        : "border-border bg-white/70 hover:border-primary/50"
+                    }`}
+                  >
+                    <div className="text-sm font-medium">{size.label}</div>
+                    <div className="text-xs text-muted-foreground mt-1">{size.description}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <Label className="text-xs font-medium mb-1.5 block flex items-center gap-1">
+                <FrameIcon className="h-3 w-3 text-primary" />
+                フレームを選択
               </Label>
-              <div className="space-y-3">
-                <Slider
-                  value={[sliderValue]}
-                  onValueChange={handleSliderChange}
-                  max={maxSliderValue}
-                  min={minSliderValue}
-                  step={1}
-                  className="w-full"
-                />
-                <div className="flex justify-center">
+              <div className="grid grid-cols-2 gap-2">
+                {FRAMES.map((frame) => (
+                  <button
+                    key={frame.value}
+                    type="button"
+                    onClick={() => setSelectedFrame(frame.value)}
+                    className={`p-2.5 rounded-lg border-2 transition-all ${
+                      selectedFrame === frame.value
+                        ? "border-primary bg-primary/10 shadow-md"
+                        : "border-border bg-white/70 hover:border-primary/50"
+                    }`}
+                  >
+                    <div className="text-xs font-medium mb-1">{frame.label}</div>
+                    <div className="text-[10px] font-bold text-primary">{frame.points}pt</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <Label className="text-xs font-medium mb-2 block flex items-center justify-between">
+                <span>メッセージを記入</span>
+                <span className="text-muted-foreground">
+                  {comment.length}/{currentPageSize.maxLength}文字
+                </span>
+              </Label>
+              <div className="relative w-full aspect-square max-w-md mx-auto">
+                <div className="absolute inset-0 bg-white rounded-lg shadow-2xl border-2 border-gray-200">
+                  {/* Left binding effect */}
+                  <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-gray-200/50 to-transparent"></div>
+
+                  {selectedFrameData.image && (
+                    <div
+                      className="absolute pointer-events-none rounded-lg overflow-hidden transition-all duration-300 z-10"
+                      style={{
+                        width: frameArea.width,
+                        height: frameArea.height,
+                        top: frameArea.top,
+                        left: frameArea.left,
+                      }}
+                    >
+                      <div
+                        className="absolute inset-0"
+                        style={{
+                          backgroundImage: `url(${selectedFrameData.image})`,
+                          backgroundSize: "100% 100%",
+                          backgroundPosition: "center",
+                          backgroundRepeat: "no-repeat",
+                        }}
+                      />
+                    </div>
+                  )}
+
+                  {/* Writable area indicator */}
                   <div
-                    className={`px-3 py-1 rounded-full text-xs font-medium border-2 ${amountStyle.textColor}`}
+                    className="absolute border-2 border-dashed border-primary/40 bg-white/40 rounded transition-all duration-300"
                     style={{
-                      backgroundColor: amountStyle.backgroundColor,
-                      borderColor: amountStyle.borderColor,
+                      width: writableArea.width,
+                      height: writableArea.height,
+                      top: writableArea.top,
+                      left: writableArea.left,
                     }}
                   >
-                    {amountStyle.label}
+                    <div className="absolute top-1 left-1 text-[10px] text-primary/60 font-medium bg-white/80 px-1 rounded">
+                      記入エリア
+                    </div>
+                  </div>
+
+                  <div
+                    className="absolute p-3 overflow-hidden z-20"
+                    style={{
+                      width: writableArea.width,
+                      height: writableArea.height,
+                      top: writableArea.top,
+                      left: writableArea.left,
+                    }}
+                  >
+                    <Textarea
+                      id="comment"
+                      placeholder="応援メッセージを入力してください"
+                      value={comment}
+                      onChange={handleCommentChange}
+                      maxLength={currentPageSize.maxLength}
+                      className="w-full h-full resize-none bg-transparent border-none focus-visible:ring-0 focus-visible:ring-offset-0 text-sm leading-relaxed font-serif overflow-hidden"
+                      style={{
+                        textShadow: "0 0 1px rgba(0,0,0,0.1)",
+                      }}
+                    />
+                  </div>
+
+                  {selectedStamps.length > 0 && (
+                    <div
+                      className="absolute z-30 flex gap-1 items-center justify-center flex-wrap px-2"
+                      style={{
+                        width: writableArea.width,
+                        left: writableArea.left,
+                        bottom: `calc(100% - ${writableArea.top} - ${writableArea.height} + 8px)`,
+                      }}
+                    >
+                      {selectedStamps.map((stampEmoji, i) => (
+                        <div
+                          key={i}
+                          className="text-xl drop-shadow-lg animate-fade-in"
+                          style={{ animationDelay: `${i * 0.05}s` }}
+                        >
+                          {stampEmoji}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Page size label */}
+                  <div className="absolute bottom-2 right-4 text-xs text-gray-400 font-serif">
+                    {PAGE_SIZES.find((s) => s.value === pageSize)?.label}
                   </div>
                 </div>
               </div>
             </div>
 
             <div>
-              <Label htmlFor="comment" className="text-xs font-medium">
-                コメント
+              <Label className="text-xs font-medium mb-1.5 block flex items-center gap-1">
+                <SparklesIcon className="h-3 w-3 text-primary" />
+                ギフティングスタンプ
               </Label>
-              <Textarea
-                id="comment"
-                placeholder="応援メッセージを入力してください"
-                value={comment}
-                onChange={handleCommentChange}
-                className="resize-none mt-1 text-sm bg-white/70"
-                rows={3}
-              />
+              <div className="grid grid-cols-4 gap-1.5">
+                {STAMPS.map((stamp) => (
+                  <button
+                    key={stamp.emoji}
+                    type="button"
+                    onClick={() => toggleStamp(stamp.emoji)}
+                    className={`p-2 rounded-lg border-2 transition-all ${
+                      selectedStamps.includes(stamp.emoji)
+                        ? "border-primary bg-primary/10 shadow-md scale-105"
+                        : "border-border bg-white/70 hover:border-primary/50"
+                    }`}
+                  >
+                    <div className="text-xl mb-0.5">{stamp.emoji}</div>
+                    <div className="text-[10px] font-bold text-primary">{stamp.points}pt</div>
+                  </button>
+                ))}
+              </div>
             </div>
 
-            {/* メッセージプレビュー */}
-            <div>
-              <Label className="text-xs font-medium mb-2 block">プレビュー</Label>
-              <motion.div
-                className={`relative p-4 rounded-lg border-2 bg-gradient-to-br ${amountStyle.gradient} shadow-md`}
-                style={{
-                  borderColor: amountStyle.borderColor,
-                }}
-                initial={{ scale: 0.95 }}
-                animate={{ scale: 1 }}
-                transition={{ duration: 0.2 }}
-                key={amount} // 金額が変わるたびにアニメーションを再実行
-              >
-                <div className="flex items-start justify-between mb-2">
-                  <div className={`font-medium text-sm ${amountStyle.textColor}`}>{performerName}さんへ</div>
-                  <div className={`flex items-center gap-1 ${amountStyle.textColor}`}>
-                    <BanknoteIcon className="h-3 w-3" />
-                    <span className="text-xs font-bold">¥{amount.toLocaleString()}</span>
-                  </div>
+            <div className="bg-primary/5 p-3 rounded-lg border border-primary/20">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">合計ポイント</span>
+                <div className="flex items-center gap-1">
+                  <BanknoteIcon className="h-4 w-4 text-primary" />
+                  <span className="text-lg font-bold text-primary">{totalAmount.toLocaleString()}pt</span>
                 </div>
-                <div
-                  className={`text-sm ${amountStyle.textColor} ${
-                    comment ? "opacity-100" : "opacity-50"
-                  } transition-opacity`}
-                >
-                  {comment || "メッセージを入力してください..."}
-                </div>
-                {/* 便箋風の装飾 */}
-                <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
-                  <div className="absolute top-2 left-2 w-2 h-2 rounded-full bg-white/20"></div>
-                  <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-white/20"></div>
-                  <div className="absolute bottom-2 left-2 w-2 h-2 rounded-full bg-white/20"></div>
-                  <div className="absolute bottom-2 right-2 w-2 h-2 rounded-full bg-white/20"></div>
-                </div>
-              </motion.div>
+              </div>
             </div>
           </CardContent>
-          <CardFooter className={`${amountStyle.footerBg} border-t p-3`}>
+          <CardFooter className="bg-muted/20 border-t p-3">
             <RippleButton type="submit" className="w-full gap-1 rounded-full h-9 text-sm" disabled={isSubmitting}>
               <SendIcon className="h-3 w-3" />
               {isSubmitting ? "処理中..." : "確認画面へ"}
@@ -250,6 +343,6 @@ export function TipForm({ eventId, performerId, performerName, paypayId }: TipFo
           </CardFooter>
         </form>
       </Card>
-    </motion.div>
+    </div>
   )
 }
