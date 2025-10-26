@@ -81,18 +81,20 @@ export default function PDFPage({ params }: PDFPageProps) {
         tempDiv.style.height = "794px"
         tempDiv.style.position = "absolute"
         tempDiv.style.left = "-9999px"
-        tempDiv.style.backgroundColor = "#FFFFFF"
+        tempDiv.style.backgroundImage = "url(/images/page-background.jpg)"
+        tempDiv.style.backgroundSize = "cover"
+        tempDiv.style.backgroundPosition = "center"
         tempDiv.className = "relative"
 
         const getWritableAreaStyle = () => {
           switch (message.page_size) {
             case "quarter":
-              return "position: absolute; top: 60px; left: 60px; right: 60px; bottom: 50%; background: transparent;"
+              return "position: absolute; top: 60px; left: 60px; right: 60px; bottom: 50%; background: #FFFFFF;"
             case "half":
-              return "position: absolute; top: 60px; left: 60px; right: 60px; bottom: 60px; background: transparent;"
+              return "position: absolute; top: 60px; left: 60px; right: 60px; bottom: 60px; background: #FFFFFF;"
             case "full":
             default:
-              return "position: absolute; top: 60px; left: 60px; right: 60px; bottom: 60px; background: transparent;"
+              return "position: absolute; top: 60px; left: 60px; right: 60px; bottom: 60px; background: #FFFFFF;"
           }
         }
 

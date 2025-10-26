@@ -62,7 +62,7 @@ export default function ClientLayout({
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
+    <div className="flex flex-col min-h-screen">
       <main className="flex-1 px-4 pb-20 mx-auto w-full max-w-md">
         <PageTransition>
           <div className="py-4">{children}</div>

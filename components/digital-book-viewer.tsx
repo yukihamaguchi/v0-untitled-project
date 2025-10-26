@@ -83,7 +83,7 @@ export function DigitalBookViewer({ messages, eventId }: DigitalBookViewerProps)
 
   // ページサイズに応じた表示エリアのスタイルを取得
   const getWritableAreaStyle = () => {
-    const baseStyle = "absolute bg-transparent"
+    const baseStyle = "absolute bg-white"
     switch (message.page_size) {
       case "quarter":
         return `${baseStyle} top-12 left-12 right-12 bottom-[50%]`
@@ -149,7 +149,7 @@ export function DigitalBookViewer({ messages, eventId }: DigitalBookViewerProps)
           <div className="flex flex-col items-center">
             <div
               id="book-page"
-              className="relative w-full max-w-md aspect-square bg-white rounded-lg shadow-2xl overflow-hidden"
+              className="relative w-full max-w-md aspect-square message-book-page rounded-lg shadow-2xl overflow-hidden"
             >
               <div
                 className="absolute left-0 top-0 bottom-0 w-8 opacity-20 pointer-events-none"

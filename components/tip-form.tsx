@@ -153,7 +153,7 @@ export function TipForm({ eventId, performerId, performerName, paypayId }: TipFo
               <Label htmlFor="performer" className="text-xs font-medium">
                 出演者
               </Label>
-              <Input id="performer" value={performerName} disabled className="mt-1 bg-white/70 text-sm h-9" />
+              <Input id="performer" value={performerName} disabled className="mt-1 bg-white text-sm h-9" />
             </div>
 
             <div>
@@ -209,7 +209,14 @@ export function TipForm({ eventId, performerId, performerName, paypayId }: TipFo
                 </span>
               </Label>
               <div className="relative w-full aspect-square max-w-md mx-auto">
-                <div className="absolute inset-0 bg-white rounded-lg shadow-2xl border-2 border-gray-200">
+                <div
+                  className="absolute inset-0 rounded-lg shadow-2xl border-2 border-gray-200"
+                  style={{
+                    backgroundImage: "url(/images/page-background.jpg)",
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                  }}
+                >
                   {/* Left binding effect */}
                   <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-gray-200/50 to-transparent"></div>
 
@@ -235,9 +242,8 @@ export function TipForm({ eventId, performerId, performerName, paypayId }: TipFo
                     </div>
                   )}
 
-                  {/* Writable area indicator */}
                   <div
-                    className="absolute border-2 border-dashed border-primary/40 bg-white/40 rounded transition-all duration-300"
+                    className="absolute border-2 border-dashed border-primary/40 bg-white rounded transition-all duration-300"
                     style={{
                       width: writableArea.width,
                       height: writableArea.height,
@@ -265,7 +271,7 @@ export function TipForm({ eventId, performerId, performerName, paypayId }: TipFo
                       value={comment}
                       onChange={handleCommentChange}
                       maxLength={currentPageSize.maxLength}
-                      className="w-full h-full resize-none bg-transparent border-none focus-visible:ring-0 focus-visible:ring-offset-0 text-sm leading-relaxed font-serif overflow-hidden"
+                      className="w-full h-full resize-none bg-white border-none focus-visible:ring-0 focus-visible:ring-offset-0 text-sm leading-relaxed font-serif overflow-hidden"
                       style={{
                         textShadow: "0 0 1px rgba(0,0,0,0.1)",
                       }}

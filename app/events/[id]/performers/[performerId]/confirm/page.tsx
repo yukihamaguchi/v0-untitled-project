@@ -246,7 +246,15 @@ export default function ConfirmPage({ params }: ConfirmPageProps) {
                 送信内容
               </div>
               <div className="relative w-full aspect-square max-w-md mx-auto">
-                <div className="absolute inset-0 bg-white rounded-lg shadow-2xl border-2 border-gray-200 overflow-visible">
+                {/* Message book page background changed to image */}
+                <div
+                  className="absolute inset-0 rounded-lg shadow-2xl border-2 border-gray-200 overflow-visible"
+                  style={{
+                    backgroundImage: "url(/images/page-background.jpg)",
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                  }}
+                >
                   {/* Left binding effect */}
                   <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-gray-200/50 to-transparent z-[5]"></div>
 
@@ -272,8 +280,9 @@ export default function ConfirmPage({ params }: ConfirmPageProps) {
                     </div>
                   )}
 
+                  {/* Writable area background changed to pure white */}
                   <div
-                    className="absolute p-3 overflow-hidden"
+                    className="absolute p-3 overflow-hidden bg-white"
                     style={{
                       width: writableArea.width,
                       height: writableArea.height,
