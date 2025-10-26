@@ -22,6 +22,8 @@ export async function saveGifting(data: GiftingData) {
       frame_points: data.frame_points || 0,
       stamps: data.stamps && data.stamps.length > 0 ? data.stamps : null,
       stamp_points: data.stamp_points || 0,
+      sender_name: data.sender_name || null,
+      sender_avatar: data.sender_avatar || "/images/default-avatar.jpg",
     }
 
     console.log("[v0] Saving gifting data:", JSON.stringify(insertData, null, 2))

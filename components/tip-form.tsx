@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { useRouter } from "next/navigation"
-import { BanknoteIcon, SendIcon, BookOpenIcon, SparklesIcon, FrameIcon } from "lucide-react"
+import { BanknoteIcon, SendIcon, BookOpenIcon, SparklesIcon, FrameIcon, UserIcon } from "lucide-react"
 import { RippleButton } from "./ripple-button"
 import { savePaymentInfo } from "@/utils/payment"
 
@@ -22,7 +22,7 @@ interface TipFormProps {
 const PAGE_SIZES = [
   { value: "full", label: "1ページ", description: "150文字まで", maxLength: 150 },
   { value: "half", label: "1/2ページ", description: "64文字まで", maxLength: 64 },
-  { value: "quarter", label: "1/4ページ", description: "20文字まで", maxLength: 20 },
+  { value: "quarter", label: "1/4ページ", description: "36文字まで", maxLength: 36 },
 ] as const
 
 const FRAMES = [
@@ -60,6 +60,8 @@ export function TipForm({ eventId, performerId, performerName, paypayId }: TipFo
   const [comment, setComment] = useState<string>("")
   const [selectedStamps, setSelectedStamps] = useState<string[]>([])
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
+  const [senderName, setSenderName] = useState<string>("")
+  const [senderAvatar, setSenderAvatar] = useState<string>("/images/default-avatar.jpg")
 
   const stampPoints = selectedStamps.reduce((total, stampEmoji) => {
     const stamp = STAMPS.find((s) => s.emoji === stampEmoji)
@@ -100,6 +102,8 @@ export function TipForm({ eventId, performerId, performerName, paypayId }: TipFo
       framePoints: selectedFrameData.points,
       stamps: selectedStamps,
       stampPoints,
+      senderName,
+      senderAvatar,
     }
     savePaymentInfo(paymentInfo)
 
@@ -116,7 +120,7 @@ export function TipForm({ eventId, performerId, performerName, paypayId }: TipFo
       case "half":
         return { width: "calc(100% - 48px)", height: "calc(50% - 36px)", top: "24px", left: "24px" }
       case "quarter":
-        return { width: "calc(50% - 36px)", height: "calc(50% - 36px)", top: "24px", left: "24px" }
+        return { width: "calc(100% - 48px)", height: "calc(33% - 30px)", top: "24px", left: "24px" }
       default:
         return { width: "calc(100% - 48px)", height: "calc(100% - 48px)", top: "24px", left: "24px" }
     }
@@ -125,13 +129,13 @@ export function TipForm({ eventId, performerId, performerName, paypayId }: TipFo
   const getWritableArea = () => {
     switch (pageSize) {
       case "full":
-        return { width: "calc(100% - 96px)", height: "calc(100% - 96px)", top: "48px", left: "48px" }
+        return { width: "calc(100% - 64px)", height: "calc(100% - 64px)", top: "32px", left: "32px" }
       case "half":
-        return { width: "calc(100% - 96px)", height: "calc(50% - 72px)", top: "48px", left: "48px" }
+        return { width: "calc(100% - 64px)", height: "calc(50% - 48px)", top: "32px", left: "32px" }
       case "quarter":
-        return { width: "calc(50% - 72px)", height: "calc(50% - 72px)", top: "48px", left: "48px" }
+        return { width: "calc(100% - 64px)", height: "calc(33% - 40px)", top: "32px", left: "32px" }
       default:
-        return { width: "calc(100% - 96px)", height: "calc(100% - 96px)", top: "48px", left: "48px" }
+        return { width: "calc(100% - 64px)", height: "calc(100% - 64px)", top: "32px", left: "32px" }
     }
   }
 
@@ -157,6 +161,21 @@ export function TipForm({ eventId, performerId, performerName, paypayId }: TipFo
             </div>
 
             <div>
+              <Label htmlFor="senderName" className="text-xs font-medium flex items-center gap-1">
+                <UserIcon className="h-3 w-3 text-primary" />
+                送り主の名前
+              </Label>
+              <Input
+                id="senderName"
+                value={senderName}
+                onChange={(e) => setSenderName(e.target.value)}
+                placeholder="例: TOSHIYA"
+                className="mt-1 bg-white text-sm h-9"
+                maxLength={20}
+              />
+            </div>
+
+            <div>
               <Label className="text-xs font-medium mb-2 block">ページサイズ</Label>
               <div className="grid grid-cols-3 gap-2">
                 {PAGE_SIZES.map((size) => (
@@ -164,21 +183,21 @@ export function TipForm({ eventId, performerId, performerName, paypayId }: TipFo
                     key={size.value}
                     type="button"
                     onClick={() => setPageSize(size.value)}
-                    className={`p-3 rounded-lg border-2 transition-all ${
+                    className={`p-2.5 rounded-lg border-2 transition-all ${
                       pageSize === size.value
                         ? "border-primary bg-primary/10 shadow-md"
                         : "border-border bg-white/70 hover:border-primary/50"
                     }`}
                   >
-                    <div className="text-sm font-medium">{size.label}</div>
-                    <div className="text-xs text-muted-foreground mt-1">{size.description}</div>
+                    <div className="text-xs font-medium mb-1">{size.label}</div>
+                    <div className="text-[10px] text-muted-foreground">{size.description}</div>
                   </button>
                 ))}
               </div>
             </div>
 
             <div>
-              <Label className="text-xs font-medium mb-1.5 block flex items-center gap-1">
+              <Label className="text-xs font-medium mb-2 block flex items-center gap-1">
                 <FrameIcon className="h-3 w-3 text-primary" />
                 フレームを選択
               </Label>
@@ -220,30 +239,8 @@ export function TipForm({ eventId, performerId, performerName, paypayId }: TipFo
                   {/* Left binding effect */}
                   <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-gray-200/50 to-transparent"></div>
 
-                  {selectedFrameData.image && (
-                    <div
-                      className="absolute pointer-events-none rounded-lg overflow-hidden transition-all duration-300 z-10"
-                      style={{
-                        width: frameArea.width,
-                        height: frameArea.height,
-                        top: frameArea.top,
-                        left: frameArea.left,
-                      }}
-                    >
-                      <div
-                        className="absolute inset-0"
-                        style={{
-                          backgroundImage: `url(${selectedFrameData.image})`,
-                          backgroundSize: "100% 100%",
-                          backgroundPosition: "center",
-                          backgroundRepeat: "no-repeat",
-                        }}
-                      />
-                    </div>
-                  )}
-
                   <div
-                    className="absolute border-2 border-dashed border-primary/40 bg-white rounded transition-all duration-300"
+                    className="absolute border-2 border-dashed border-primary/40 bg-white rounded transition-all duration-300 z-[1]"
                     style={{
                       width: writableArea.width,
                       height: writableArea.height,
@@ -251,7 +248,29 @@ export function TipForm({ eventId, performerId, performerName, paypayId }: TipFo
                       left: writableArea.left,
                     }}
                   >
-                    <div className="absolute top-1 left-1 text-[10px] text-primary/60 font-medium bg-white/80 px-1 rounded">
+                    {selectedFrameData.image && (
+                      <div
+                        className="absolute inset-0 pointer-events-none z-[5]"
+                        style={{
+                          backgroundImage: `url(${selectedFrameData.image})`,
+                          backgroundSize: "100% 100%",
+                          backgroundPosition: "center",
+                          backgroundRepeat: "no-repeat",
+                        }}
+                      />
+                    )}
+
+                    {senderName && (
+                      <div className="absolute top-2 left-2 flex items-center gap-2 bg-white/90 px-2 py-1 rounded-lg z-10">
+                        <img
+                          src={senderAvatar || "/placeholder.svg"}
+                          alt={senderName}
+                          className="w-8 h-8 rounded-full object-cover border-2 border-primary/20"
+                        />
+                        <span className="text-xs font-medium text-gray-700">{senderName}</span>
+                      </div>
+                    )}
+                    <div className="absolute top-1 right-1 text-[10px] text-primary/60 font-medium bg-white/80 px-1 rounded z-10">
                       記入エリア
                     </div>
                   </div>
@@ -263,6 +282,7 @@ export function TipForm({ eventId, performerId, performerName, paypayId }: TipFo
                       height: writableArea.height,
                       top: writableArea.top,
                       left: writableArea.left,
+                      paddingTop: senderName ? "48px" : "12px",
                     }}
                   >
                     <Textarea
@@ -274,6 +294,7 @@ export function TipForm({ eventId, performerId, performerName, paypayId }: TipFo
                       className="w-full h-full resize-none bg-white border-none focus-visible:ring-0 focus-visible:ring-offset-0 text-sm leading-relaxed font-serif overflow-hidden"
                       style={{
                         textShadow: "0 0 1px rgba(0,0,0,0.1)",
+                        color: "#7c3aed",
                       }}
                     />
                   </div>
@@ -300,7 +321,7 @@ export function TipForm({ eventId, performerId, performerName, paypayId }: TipFo
                   )}
 
                   {/* Page size label */}
-                  <div className="absolute bottom-2 right-4 text-xs text-gray-400 font-serif">
+                  <div className="absolute bottom-2 right-4 text-xs text-gray-400 font-serif leading-none scale-y-50 origin-bottom">
                     {PAGE_SIZES.find((s) => s.value === pageSize)?.label}
                   </div>
                 </div>

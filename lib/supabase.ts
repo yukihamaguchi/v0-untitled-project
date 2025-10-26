@@ -36,5 +36,7 @@ export interface GiftingData {
   frame_points?: number
   stamps?: string[] | null // Array of stamp emojis or null
   stamp_points?: number
+  sender_name?: string // Added sender name field
+  sender_avatar?: string // Added sender avatar field
   created_at?: string
 }

@@ -13,6 +13,27 @@ interface PDFPageProps {
   }
 }
 
+const FRAMES = [
+  {
+    value: "none",
+    label: "フレームなし",
+    points: 0,
+    image: null,
+  },
+  {
+    value: "flower",
+    label: "フラワーフレーム",
+    points: 500,
+    image: "/images/frame-flower.png",
+  },
+  {
+    value: "autumn",
+    label: "オータムフレーム",
+    points: 500,
+    image: "/images/frame-autumn.png",
+  },
+] as const
+
 export default function PDFPage({ params }: PDFPageProps) {
   const router = useRouter()
   const { toast } = useToast()
@@ -70,7 +91,7 @@ export default function PDFPage({ params }: PDFPageProps) {
       const pdf = new jsPDF({
         orientation: "portrait",
         unit: "mm",
-        format: [210, 210], // 正方形フォーマット
+        format: [210, 210],
       })
 
       for (let i = 0; i < messagesData.length; i++) {
@@ -89,9 +110,9 @@ export default function PDFPage({ params }: PDFPageProps) {
         const getWritableAreaStyle = () => {
           switch (message.page_size) {
             case "quarter":
-              return "position: absolute; top: 60px; left: 60px; right: 60px; bottom: 50%; background: #FFFFFF;"
+              return "position: absolute; top: 60px; left: 60px; right: 60px; height: calc(33% - 40px); background: #FFFFFF;"
             case "half":
-              return "position: absolute; top: 60px; left: 60px; right: 60px; bottom: 60px; background: #FFFFFF;"
+              return "position: absolute; top: 60px; left: 60px; right: 60px; height: calc(50% - 60px); background: #FFFFFF;"
             case "full":
             default:
               return "position: absolute; top: 60px; left: 60px; right: 60px; bottom: 60px; background: #FFFFFF;"
@@ -101,9 +122,9 @@ export default function PDFPage({ params }: PDFPageProps) {
         const getFrameAreaStyle = () => {
           switch (message.page_size) {
             case "quarter":
-              return "position: absolute; top: 30px; left: 30px; right: 30px; bottom: 50%; pointer-events: none; z-index: 10;"
+              return "position: absolute; top: 30px; left: 30px; right: 30px; height: calc(33% - 30px); pointer-events: none; z-index: 10;"
             case "half":
-              return "position: absolute; top: 30px; left: 30px; right: 30px; bottom: 30px; pointer-events: none; z-index: 10;"
+              return "position: absolute; top: 30px; left: 30px; right: 30px; height: calc(50% - 30px); pointer-events: none; z-index: 10;"
             case "full":
             default:
               return "position: absolute; top: 30px; left: 30px; right: 30px; bottom: 30px; pointer-events: none; z-index: 10;"
@@ -111,27 +132,29 @@ export default function PDFPage({ params }: PDFPageProps) {
         }
 
         const getFrameImage = () => {
-          switch (message.frame_type) {
-            case "flower":
-              return "/images/frame-flower.png"
-            case "autumn":
-              return "/images/frame-autumn.png"
-            default:
-              return null
-          }
+          const frame = FRAMES.find((f) => f.value === message.frame_type)
+          return frame?.image || null
         }
 
         const frameImage = getFrameImage()
 
         tempDiv.innerHTML = `
-          ${
-            frameImage
-              ? `<div style="${getFrameAreaStyle()} background-image: url(${frameImage}); background-size: 100% 100%; background-position: center; background-repeat: no-repeat;"></div>`
-              : ""
-          }
-          <div style="${getWritableAreaStyle()} z-index: 20;">
-            <div style="width: 100%; height: 100%; padding: 40px; overflow: hidden;">
-              <p style="font-size: 18px; line-height: 2.0; white-space: pre-wrap; word-break: break-word; color: #1f2937; font-family: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;">
+          <div style="${getWritableAreaStyle()} z-index: 1;">
+            ${
+              frameImage
+                ? `<div style="position: absolute; inset: 0; background-image: url(${frameImage}); background-size: 100% 100%; background-position: center; background-repeat: no-repeat; pointer-events: none; z-index: 5;"></div>`
+                : ""
+            }
+            <div style="width: 100%; height: 100%; padding: 40px; overflow: hidden; position: relative; z-index: 10;">
+              ${
+                message.user_name
+                  ? `<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                  <img src="/images/default-avatar.jpg" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(124, 58, 237, 0.2);" />
+                  <span style="font-size: 16px; font-weight: 600; color: #374151;">${message.user_name}</span>
+                </div>`
+                  : ""
+              }
+              <p style="font-size: 18px; line-height: 2.0; white-space: pre-wrap; word-break: break-word; color: #7c3aed; font-family: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;">
                 ${message.comment || "メッセージなし"}
               </p>
             </div>
@@ -143,7 +166,7 @@ export default function PDFPage({ params }: PDFPageProps) {
             </div>`
               : ""
           }
-          <div style="position: absolute; bottom: 30px; right: 30px; font-size: 12px; color: #9ca3af; z-index: 5;">
+          <div style="position: absolute; bottom: 30px; right: 30px; font-size: 12px; color: #9ca3af; z-index: 5; line-height: 1; transform: scaleY(0.5); transform-origin: bottom;">
             ${i + 1}ページ
           </div>
         `

@@ -30,7 +30,7 @@ const STAMPS = [
 const PAGE_SIZES = [
   { value: "full", label: "1ページ", description: "150文字まで" },
   { value: "half", label: "1/2ページ", description: "64文字まで" },
-  { value: "quarter", label: "1/4ページ", description: "20文字まで" },
+  { value: "quarter", label: "1/4ページ", description: "36文字まで" },
 ] as const
 
 const FRAMES = [
@@ -69,6 +69,8 @@ export default function ConfirmPage({ params }: ConfirmPageProps) {
     framePoints: number
     stamps: string[]
     stampPoints: number
+    senderName?: string
+    senderAvatar?: string
   } | null>(null)
 
   useEffect(() => {
@@ -94,6 +96,8 @@ export default function ConfirmPage({ params }: ConfirmPageProps) {
         framePoints: info.framePoints || 0,
         stamps: info.stamps || [],
         stampPoints: info.stampPoints || 0,
+        senderName: info.senderName,
+        senderAvatar: info.senderAvatar || "/images/default-avatar.jpg",
       })
     } else {
       router.push(`/events/${eventId}/performers/${performerId}`)
@@ -192,7 +196,7 @@ export default function ConfirmPage({ params }: ConfirmPageProps) {
       case "half":
         return { width: "calc(100% - 48px)", height: "calc(50% - 36px)", top: "24px", left: "24px" }
       case "quarter":
-        return { width: "calc(50% - 36px)", height: "calc(50% - 36px)", top: "24px", left: "24px" }
+        return { width: "calc(100% - 48px)", height: "calc(33% - 30px)", top: "24px", left: "24px" }
       default:
         return { width: "calc(100% - 48px)", height: "calc(100% - 48px)", top: "24px", left: "24px" }
     }
@@ -201,13 +205,13 @@ export default function ConfirmPage({ params }: ConfirmPageProps) {
   const getWritableArea = () => {
     switch (paymentInfo.pageSize) {
       case "full":
-        return { width: "calc(100% - 96px)", height: "calc(100% - 96px)", top: "48px", left: "48px" }
+        return { width: "calc(100% - 64px)", height: "calc(100% - 64px)", top: "32px", left: "32px" }
       case "half":
-        return { width: "calc(100% - 96px)", height: "calc(50% - 72px)", top: "48px", left: "48px" }
+        return { width: "calc(100% - 64px)", height: "calc(50% - 48px)", top: "32px", left: "32px" }
       case "quarter":
-        return { width: "calc(50% - 72px)", height: "calc(50% - 72px)", top: "48px", left: "48px" }
+        return { width: "calc(100% - 64px)", height: "calc(33% - 40px)", top: "32px", left: "32px" }
       default:
-        return { width: "calc(100% - 96px)", height: "calc(100% - 96px)", top: "48px", left: "48px" }
+        return { width: "calc(100% - 64px)", height: "calc(100% - 64px)", top: "32px", left: "32px" }
     }
   }
 
@@ -258,40 +262,43 @@ export default function ConfirmPage({ params }: ConfirmPageProps) {
                   {/* Left binding effect */}
                   <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-gray-200/50 to-transparent z-[5]"></div>
 
-                  {selectedFrameData.image && (
-                    <div
-                      className="absolute pointer-events-none overflow-visible"
-                      style={{
-                        width: frameArea.width,
-                        height: frameArea.height,
-                        top: frameArea.top,
-                        left: frameArea.left,
-                        zIndex: 15,
-                      }}
-                    >
-                      <img
-                        src={selectedFrameData.image || "/placeholder.svg"}
-                        alt={selectedFrameData.label}
-                        className="w-full h-full object-cover"
-                        style={{
-                          imageRendering: "crisp-edges",
-                        }}
-                      />
-                    </div>
-                  )}
-
                   {/* Writable area background changed to pure white */}
                   <div
-                    className="absolute p-3 overflow-hidden bg-white"
+                    className="absolute p-3 overflow-hidden bg-white z-[1]"
                     style={{
                       width: writableArea.width,
                       height: writableArea.height,
                       top: writableArea.top,
                       left: writableArea.left,
-                      zIndex: 20,
                     }}
                   >
-                    <div className="w-full h-full text-sm leading-relaxed font-serif whitespace-pre-wrap break-words">
+                    {/* Frame image inside white area */}
+                    {selectedFrameData.image && (
+                      <div
+                        className="absolute inset-0 pointer-events-none z-[5]"
+                        style={{
+                          backgroundImage: `url(${selectedFrameData.image})`,
+                          backgroundSize: "100% 100%",
+                          backgroundPosition: "center",
+                          backgroundRepeat: "no-repeat",
+                        }}
+                      />
+                    )}
+
+                    {paymentInfo.senderName && (
+                      <div className="flex items-center gap-2 mb-3 relative z-10">
+                        <img
+                          src={paymentInfo.senderAvatar || "/images/default-avatar.jpg"}
+                          alt={paymentInfo.senderName}
+                          className="w-10 h-10 rounded-full object-cover border-2 border-primary/20"
+                        />
+                        <span className="text-sm font-medium text-gray-700">{paymentInfo.senderName}</span>
+                      </div>
+                    )}
+                    <div
+                      className="w-full text-sm leading-relaxed font-serif whitespace-pre-wrap break-words relative z-10"
+                      style={{ color: "#7c3aed" }}
+                    >
                       {paymentInfo.comment || "メッセージなし"}
                     </div>
                   </div>
@@ -321,7 +328,7 @@ export default function ConfirmPage({ params }: ConfirmPageProps) {
                   )}
 
                   {/* Page size label */}
-                  <div className="absolute bottom-2 right-4 text-xs text-gray-400 font-serif z-[5]">
+                  <div className="absolute bottom-2 right-4 text-xs text-gray-400 font-serif z-[5] leading-none scale-y-50 origin-bottom">
                     {pageSizeLabel}
                   </div>
                 </div>
