@@ -124,7 +124,6 @@ export default function PDFPage({ params }: PDFPageProps) {
         const frameImage = getFrameImage()
 
         tempDiv.innerHTML = `
-          <div style="position: absolute; left: 0; top: 0; bottom: 0; width: 32px; opacity: 0.2; background: linear-gradient(90deg, #999 0%, transparent 100%);"></div>
           ${
             frameImage
               ? `<div style="${getFrameAreaStyle()} background-image: url(${frameImage}); background-size: 100% 100%; background-position: center; background-repeat: no-repeat;"></div>`
