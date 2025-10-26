@@ -1,9 +1,6 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { ArrowLeftIcon, DownloadIcon } from "lucide-react"
-import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { getUserSession } from "@/utils/auth"
 import { getEventGiftings } from "@/app/actions/gifting-actions"
@@ -194,18 +191,9 @@ export default function PDFPage({ params }: PDFPageProps) {
     }
   }
 
-  const downloadPDF = () => {
-    if (pdfBlobUrl) {
-      const link = document.createElement("a")
-      link.href = pdfBlobUrl
-      link.download = `メッセージブック_${new Date().toLocaleDateString("ja-JP")}.pdf`
-      link.click()
-    }
-  }
-
   if (isLoading || isGeneratingPDF) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground">{isGeneratingPDF ? "PDF生成中..." : "読み込み中..."}</p>
@@ -215,32 +203,19 @@ export default function PDFPage({ params }: PDFPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-primary/5 to-background">
-      <div className="container max-w-6xl mx-auto px-4 py-6">
-        <div className="flex items-center justify-between mb-6">
-          <Link href={`/artist/events/${eventId}`}>
-            <Button variant="ghost" size="sm">
-              <ArrowLeftIcon className="h-4 w-4 mr-2" />
-              イベントに戻る
-            </Button>
-          </Link>
-
-          <Button onClick={downloadPDF} disabled={!pdfBlobUrl}>
-            <DownloadIcon className="h-4 w-4 mr-2" />
-            PDFダウンロード
-          </Button>
+    <div className="fixed inset-0 w-screen h-screen bg-background">
+      {pdfBlobUrl ? (
+        <iframe
+          src={pdfBlobUrl}
+          className="w-full h-full border-0"
+          title="メッセージブックPDF"
+          style={{ display: "block" }}
+        />
+      ) : (
+        <div className="flex items-center justify-center h-full">
+          <p className="text-muted-foreground">PDFを生成できませんでした</p>
         </div>
-
-        {pdfBlobUrl ? (
-          <div className="bg-white rounded-lg shadow-lg overflow-hidden" style={{ height: "calc(100vh - 140px)" }}>
-            <iframe src={pdfBlobUrl} className="w-full h-full" title="メッセージブックPDF" />
-          </div>
-        ) : (
-          <div className="flex items-center justify-center h-96">
-            <p className="text-muted-foreground">PDFを生成できませんでした</p>
-          </div>
-        )}
-      </div>
+      )}
     </div>
   )
 }
