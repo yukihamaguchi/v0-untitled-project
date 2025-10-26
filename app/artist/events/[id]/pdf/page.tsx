@@ -70,15 +70,15 @@ export default function PDFPage({ params }: PDFPageProps) {
       const pdf = new jsPDF({
         orientation: "portrait",
         unit: "mm",
-        format: "a4", // A4サイズ (210mm × 297mm)
+        format: [210, 210], // 正方形フォーマット
       })
 
       for (let i = 0; i < messagesData.length; i++) {
         const message = messagesData[i]
 
         const tempDiv = document.createElement("div")
-        tempDiv.style.width = "794px" // A4 width at 96 DPI
-        tempDiv.style.height = "1123px" // A4 height at 96 DPI
+        tempDiv.style.width = "794px"
+        tempDiv.style.height = "794px"
         tempDiv.style.position = "absolute"
         tempDiv.style.left = "-9999px"
         tempDiv.style.backgroundColor = "#FFFFFF"
@@ -159,8 +159,8 @@ export default function PDFPage({ params }: PDFPageProps) {
         document.body.removeChild(tempDiv)
 
         const imgData = canvas.toDataURL("image/png")
-        const imgWidth = 210 // A4 width in mm
-        const imgHeight = 297 // A4 height in mm
+        const imgWidth = 210
+        const imgHeight = 210
 
         if (i > 0) {
           pdf.addPage()
