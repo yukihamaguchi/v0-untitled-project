@@ -71,7 +71,13 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    /* Added background image to all pages */
+    @apply text-foreground;
+    background-image: url("/images/page-background.jpg");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
   }
 }
 
