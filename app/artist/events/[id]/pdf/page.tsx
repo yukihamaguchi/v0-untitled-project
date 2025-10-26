@@ -70,17 +70,15 @@ export default function PDFPage({ params }: PDFPageProps) {
       const pdf = new jsPDF({
         orientation: "portrait",
         unit: "mm",
-        format: [150, 150], // Smaller square format
+        format: "a4", // A4サイズ (210mm × 297mm)
       })
 
-      // 各メッセージページをPDFに追加
       for (let i = 0; i < messagesData.length; i++) {
         const message = messagesData[i]
 
-        // 一時的なDOMエレメントを作成
         const tempDiv = document.createElement("div")
-        tempDiv.style.width = "600px"
-        tempDiv.style.height = "600px"
+        tempDiv.style.width = "794px" // A4 width at 96 DPI
+        tempDiv.style.height = "1123px" // A4 height at 96 DPI
         tempDiv.style.position = "absolute"
         tempDiv.style.left = "-9999px"
         tempDiv.style.backgroundColor = "#FFFFFF"
@@ -89,24 +87,24 @@ export default function PDFPage({ params }: PDFPageProps) {
         const getWritableAreaStyle = () => {
           switch (message.page_size) {
             case "quarter":
-              return "position: absolute; top: 36px; left: 36px; right: 36px; bottom: 50%; background: transparent;"
+              return "position: absolute; top: 60px; left: 60px; right: 60px; bottom: 50%; background: transparent;"
             case "half":
-              return "position: absolute; top: 36px; left: 36px; right: 36px; bottom: 36px; background: transparent;"
+              return "position: absolute; top: 60px; left: 60px; right: 60px; bottom: 60px; background: transparent;"
             case "full":
             default:
-              return "position: absolute; top: 36px; left: 36px; right: 36px; bottom: 36px; background: transparent;"
+              return "position: absolute; top: 60px; left: 60px; right: 60px; bottom: 60px; background: transparent;"
           }
         }
 
         const getFrameAreaStyle = () => {
           switch (message.page_size) {
             case "quarter":
-              return "position: absolute; top: 18px; left: 18px; right: 18px; bottom: 50%; pointer-events: none; z-index: 10;"
+              return "position: absolute; top: 30px; left: 30px; right: 30px; bottom: 50%; pointer-events: none; z-index: 10;"
             case "half":
-              return "position: absolute; top: 18px; left: 18px; right: 18px; bottom: 18px; pointer-events: none; z-index: 10;"
+              return "position: absolute; top: 30px; left: 30px; right: 30px; bottom: 30px; pointer-events: none; z-index: 10;"
             case "full":
             default:
-              return "position: absolute; top: 18px; left: 18px; right: 18px; bottom: 18px; pointer-events: none; z-index: 10;"
+              return "position: absolute; top: 30px; left: 30px; right: 30px; bottom: 30px; pointer-events: none; z-index: 10;"
           }
         }
 
@@ -130,27 +128,26 @@ export default function PDFPage({ params }: PDFPageProps) {
               : ""
           }
           <div style="${getWritableAreaStyle()} z-index: 20;">
-            <div style="width: 100%; height: 100%; padding: 24px; overflow: hidden;">
-              <p style="font-size: 20px; line-height: 1.7; white-space: pre-wrap; word-break: break-word; color: #1f2937;">
+            <div style="width: 100%; height: 100%; padding: 40px; overflow: hidden;">
+              <p style="font-size: 18px; line-height: 2.0; white-space: pre-wrap; word-break: break-word; color: #1f2937; font-family: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;">
                 ${message.comment || "メッセージなし"}
               </p>
             </div>
           </div>
           ${
             message.stamps && message.stamps.length > 0
-              ? `<div style="position: absolute; bottom: 48px; left: 36px; right: 36px; display: flex; justify-content: center; align-items: center; gap: 8px; flex-wrap: wrap; z-index: 30;">
-              ${message.stamps.map((stamp) => `<span style="font-size: 40px;">${stamp}</span>`).join("")}
+              ? `<div style="position: absolute; bottom: 80px; left: 60px; right: 60px; display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; z-index: 30;">
+              ${message.stamps.map((stamp) => `<span style="font-size: 48px;">${stamp}</span>`).join("")}
             </div>`
               : ""
           }
-          <div style="position: absolute; bottom: 12px; right: 12px; font-size: 14px; color: #6b7280; z-index: 5;">
-            ${message.page_size === "quarter" ? "1/4ページ" : message.page_size === "half" ? "1/2ページ" : "1ページ"}
+          <div style="position: absolute; bottom: 30px; right: 30px; font-size: 12px; color: #9ca3af; z-index: 5;">
+            ${i + 1}ページ
           </div>
         `
 
         document.body.appendChild(tempDiv)
 
-        // DOMの更新を待つ
         await new Promise((resolve) => setTimeout(resolve, 200))
 
         const canvas = await html2canvas(tempDiv, {
@@ -162,14 +159,14 @@ export default function PDFPage({ params }: PDFPageProps) {
         document.body.removeChild(tempDiv)
 
         const imgData = canvas.toDataURL("image/png")
-        const imgWidth = 130
-        const imgHeight = 130
+        const imgWidth = 210 // A4 width in mm
+        const imgHeight = 297 // A4 height in mm
 
         if (i > 0) {
           pdf.addPage()
         }
 
-        pdf.addImage(imgData, "PNG", 10, 10, imgWidth, imgHeight)
+        pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight)
       }
 
       const pdfBlob = pdf.output("blob")

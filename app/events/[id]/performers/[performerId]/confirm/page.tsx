@@ -41,22 +41,16 @@ const FRAMES = [
     image: null,
   },
   {
-    value: "colorful",
-    label: "オリジナルフレームA",
+    value: "flower",
+    label: "フラワーフレーム",
     points: 500,
-    image: "/images/frame-colorful.jpg",
+    image: "/images/frame-flower.png",
   },
   {
-    value: "yellow-green",
-    label: "オリジナルフレームB",
+    value: "autumn",
+    label: "オータムフレーム",
     points: 500,
-    image: "/images/frame-yellow-green.jpg",
-  },
-  {
-    value: "pastel",
-    label: "オリジナルフレームC",
-    points: 500,
-    image: "/images/frame-pastel.jpg",
+    image: "/images/frame-autumn.png",
   },
 ] as const
 
@@ -252,39 +246,40 @@ export default function ConfirmPage({ params }: ConfirmPageProps) {
                 送信内容
               </div>
               <div className="relative w-full aspect-square max-w-md mx-auto">
-                <div className="absolute inset-0 bg-white rounded-lg shadow-2xl border-2 border-gray-200">
+                <div className="absolute inset-0 bg-white rounded-lg shadow-2xl border-2 border-gray-200 overflow-visible">
                   {/* Left binding effect */}
-                  <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-gray-200/50 to-transparent"></div>
+                  <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-gray-200/50 to-transparent z-[5]"></div>
 
                   {selectedFrameData.image && (
                     <div
-                      className="absolute pointer-events-none rounded-lg overflow-hidden transition-all duration-300 z-10"
+                      className="absolute pointer-events-none overflow-visible"
                       style={{
                         width: frameArea.width,
                         height: frameArea.height,
                         top: frameArea.top,
                         left: frameArea.left,
+                        zIndex: 15,
                       }}
                     >
-                      <div
-                        className="absolute inset-0"
+                      <img
+                        src={selectedFrameData.image || "/placeholder.svg"}
+                        alt={selectedFrameData.label}
+                        className="w-full h-full object-cover"
                         style={{
-                          backgroundImage: `url(${selectedFrameData.image})`,
-                          backgroundSize: "100% 100%",
-                          backgroundPosition: "center",
-                          backgroundRepeat: "no-repeat",
+                          imageRendering: "crisp-edges",
                         }}
                       />
                     </div>
                   )}
 
                   <div
-                    className="absolute p-3 overflow-hidden z-20"
+                    className="absolute p-3 overflow-hidden"
                     style={{
                       width: writableArea.width,
                       height: writableArea.height,
                       top: writableArea.top,
                       left: writableArea.left,
+                      zIndex: 20,
                     }}
                   >
                     <div className="w-full h-full text-sm leading-relaxed font-serif whitespace-pre-wrap break-words">
@@ -294,11 +289,12 @@ export default function ConfirmPage({ params }: ConfirmPageProps) {
 
                   {paymentInfo.stamps.length > 0 && (
                     <div
-                      className="absolute z-30 flex gap-1 items-center justify-center flex-wrap px-2"
+                      className="absolute flex gap-1 items-center justify-center flex-wrap px-2"
                       style={{
                         width: writableArea.width,
                         left: writableArea.left,
                         bottom: `calc(100% - ${writableArea.top} - ${writableArea.height} + 8px)`,
+                        zIndex: 30,
                       }}
                     >
                       {paymentInfo.stamps.map((stampEmoji, i) => (
@@ -316,7 +312,9 @@ export default function ConfirmPage({ params }: ConfirmPageProps) {
                   )}
 
                   {/* Page size label */}
-                  <div className="absolute bottom-2 right-4 text-xs text-gray-400 font-serif">{pageSizeLabel}</div>
+                  <div className="absolute bottom-2 right-4 text-xs text-gray-400 font-serif z-[5]">
+                    {pageSizeLabel}
+                  </div>
                 </div>
               </div>
             </div>
