@@ -1,12 +1,12 @@
 "use server"
 
-import { getSupabaseServer } from "@/lib/supabase"
+import { createClient } from "@/lib/supabase/server"
 import type { GiftingData } from "@/lib/supabase"
 
 // ギフティングデータを保存するアクション
 export async function saveGifting(data: GiftingData) {
   try {
-    const supabase = getSupabaseServer()
+    const supabase = await createClient()
 
     const insertData = {
       user_id: data.user_id,
@@ -17,7 +17,6 @@ export async function saveGifting(data: GiftingData) {
       event_name: data.event_name,
       amount: data.amount,
       comment: data.comment || null,
-      page_size: data.page_size || "full",
       frame_type: data.frame_type || "none",
       frame_points: data.frame_points || 0,
       stamps: data.stamps && data.stamps.length > 0 ? data.stamps : null,
@@ -53,7 +52,7 @@ export async function saveGifting(data: GiftingData) {
 // ユーザーのギフティング履歴を取得するアクション
 export async function getUserGiftings(userId: string) {
   try {
-    const supabase = getSupabaseServer()
+    const supabase = await createClient()
 
     const { data, error } = await supabase
       .from("giftings")
@@ -76,7 +75,7 @@ export async function getUserGiftings(userId: string) {
 // アーティストのギフティング履歴を取得するアクション
 export async function getArtistGiftings(artistId: string) {
   try {
-    const supabase = getSupabaseServer()
+    const supabase = await createClient()
 
     const { data, error } = await supabase
       .from("giftings")
@@ -99,7 +98,7 @@ export async function getArtistGiftings(artistId: string) {
 // イベントごとのギフティング履歴を取得するアクション
 export async function getEventGiftings(eventId: number) {
   try {
-    const supabase = getSupabaseServer()
+    const supabase = await createClient()
 
     const { data, error } = await supabase
       .from("giftings")

@@ -1,26 +1,5 @@
-import { createClient } from "@supabase/supabase-js"
+// Supabaseクライアントは lib/supabase/client.ts と lib/supabase/server.ts を使用してください
 
-// 環境変数からSupabaseの設定を取得
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ""
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
-
-// クライアント側のシングルトンインスタンス
-let clientInstance: ReturnType<typeof createClient> | null = null
-
-// クライアント側のSupabaseクライアントを取得
-export const getSupabaseClient = () => {
-  if (clientInstance) return clientInstance
-
-  clientInstance = createClient(supabaseUrl, supabaseAnonKey)
-  return clientInstance
-}
-
-// サーバー側のSupabaseクライアントを取得（Server Actionsで使用）
-export const getSupabaseServer = () => {
-  return createClient(process.env.SUPABASE_URL || "", process.env.SUPABASE_SERVICE_ROLE_KEY || "")
-}
-
-// ギフティングデータの型定義
 export interface GiftingData {
   id?: number
   user_id: string
@@ -31,12 +10,11 @@ export interface GiftingData {
   event_name: string
   amount: number
   comment?: string
-  page_size?: string // 'full' | 'half' | 'quarter'
-  frame_type?: string // 'none' | 'colorful' | 'yellow-green' | 'pastel'
+  frame_type?: string
   frame_points?: number
-  stamps?: string[] | null // Array of stamp emojis or null
+  stamps?: string[] | null
   stamp_points?: number
-  sender_name?: string // Added sender name field
-  sender_avatar?: string // Added sender avatar field
+  sender_name?: string
+  sender_avatar?: string
   created_at?: string
 }

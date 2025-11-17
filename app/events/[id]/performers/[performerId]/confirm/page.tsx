@@ -4,14 +4,16 @@ import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import Link from "next/link"
-import { ArrowLeft, BanknoteIcon, CheckCircle, BookOpenIcon } from "lucide-react"
+import { ArrowLeft, BanknoteIcon, CheckCircle, BookOpenIcon } from 'lucide-react'
 import { motion } from "framer-motion"
 import { RippleButton } from "@/components/ripple-button"
 import { getPaymentInfo } from "@/utils/payment"
-import { useRouter } from "next/navigation"
+import { useRouter } from 'next/navigation'
 import { saveGifting } from "@/app/actions/gifting-actions"
 import { getUserSession } from "@/utils/auth"
 import { useToast } from "@/hooks/use-toast"
+import { FRAMES } from "@/lib/constants"
+import { getWritableArea } from "@/lib/utils/message-layout"
 
 interface ConfirmPageProps {
   params: {
@@ -20,51 +22,16 @@ interface ConfirmPageProps {
   }
 }
 
-const STAMPS = [
-  { emoji: "👏", label: "拍手", points: 500 },
-  { emoji: "⭐", label: "スター", points: 1000 },
-  { emoji: "❤️", label: "ハート", points: 2000 },
-  { emoji: "🎉", label: "クラッカー", points: 5000 },
-] as const
-
-const PAGE_SIZES = [
-  { value: "full", label: "1ページ", description: "150文字まで" },
-  { value: "half", label: "1/2ページ", description: "64文字まで" },
-  { value: "quarter", label: "1/4ページ", description: "36文字まで" },
-] as const
-
-const FRAMES = [
-  {
-    value: "none",
-    label: "フレームなし",
-    points: 0,
-    image: null,
-  },
-  {
-    value: "flower",
-    label: "フラワーフレーム",
-    points: 500,
-    image: "/images/frame-flower.png",
-  },
-  {
-    value: "autumn",
-    label: "オータムフレーム",
-    points: 500,
-    image: "/images/frame-autumn.png",
-  },
-] as const
-
 export default function ConfirmPage({ params }: ConfirmPageProps) {
   const router = useRouter()
   const { toast } = useToast()
-  const eventId = Number.parseInt(params.id)
-  const performerId = Number.parseInt(params.performerId)
+  const [eventId, setEventId] = useState<number | null>(null)
+  const [performerId, setPerformerId] = useState<number | null>(null)
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
   const [paymentInfo, setPaymentInfo] = useState<{
     performerName: string
     amount: string
     comment: string
-    pageSize: string
     frameType: string
     framePoints: number
     stamps: string[]
@@ -74,6 +41,11 @@ export default function ConfirmPage({ params }: ConfirmPageProps) {
   } | null>(null)
 
   useEffect(() => {
+    const evId = Number.parseInt(params.id)
+    const perfId = Number.parseInt(params.performerId)
+    setEventId(evId)
+    setPerformerId(perfId)
+    
     const session = getUserSession()
     if (session && session.role === "artist") {
       toast({
@@ -91,7 +63,6 @@ export default function ConfirmPage({ params }: ConfirmPageProps) {
         performerName: info.performerName,
         amount: info.amount,
         comment: info.comment,
-        pageSize: info.pageSize || "full",
         frameType: info.frameType || "none",
         framePoints: info.framePoints || 0,
         stamps: info.stamps || [],
@@ -100,12 +71,12 @@ export default function ConfirmPage({ params }: ConfirmPageProps) {
         senderAvatar: info.senderAvatar || "/images/default-avatar.jpg",
       })
     } else {
-      router.push(`/events/${eventId}/performers/${performerId}`)
+      router.push(`/events/${evId}/performers/${perfId}`)
     }
-  }, [eventId, performerId, router, toast])
+  }, [params, router, toast])
 
   const handleConfirm = async () => {
-    if (isSubmitting) return
+    if (isSubmitting || eventId === null || performerId === null) return
     setIsSubmitting(true)
 
     try {
@@ -136,7 +107,7 @@ export default function ConfirmPage({ params }: ConfirmPageProps) {
         "3": { id: 3, title: "生誕祭2025" },
         "4": { id: 4, title: "ウィンターライブ2024" },
       }
-      const event = events[params.id as keyof typeof events] || { id: eventId, title: "イベント" }
+      const event = events[String(eventId) as keyof typeof events] || { id: eventId, title: "イベント" }
 
       if (paymentInfo) {
         const result = await saveGifting({
@@ -148,7 +119,6 @@ export default function ConfirmPage({ params }: ConfirmPageProps) {
           event_name: event.title,
           amount: Number.parseInt(paymentInfo.amount),
           comment: paymentInfo.comment || undefined,
-          page_size: paymentInfo.pageSize,
           frame_type: paymentInfo.frameType,
           frame_points: paymentInfo.framePoints,
           stamps: paymentInfo.stamps,
@@ -181,41 +151,13 @@ export default function ConfirmPage({ params }: ConfirmPageProps) {
     }
   }
 
-  if (!paymentInfo) {
+  if (!paymentInfo || eventId === null || performerId === null) {
     return <div className="flex items-center justify-center min-h-screen">読み込み中...</div>
   }
 
   const amount = Number.parseInt(paymentInfo.amount)
-  const pageSizeLabel = PAGE_SIZES.find((s) => s.value === paymentInfo.pageSize)?.label || "1ページ"
   const selectedFrameData = FRAMES.find((f) => f.value === paymentInfo.frameType) || FRAMES[0]
 
-  const getFrameArea = () => {
-    switch (paymentInfo.pageSize) {
-      case "full":
-        return { width: "calc(100% - 48px)", height: "calc(100% - 48px)", top: "24px", left: "24px" }
-      case "half":
-        return { width: "calc(100% - 48px)", height: "calc(50% - 36px)", top: "24px", left: "24px" }
-      case "quarter":
-        return { width: "calc(100% - 48px)", height: "calc(33% - 30px)", top: "24px", left: "24px" }
-      default:
-        return { width: "calc(100% - 48px)", height: "calc(100% - 48px)", top: "24px", left: "24px" }
-    }
-  }
-
-  const getWritableArea = () => {
-    switch (paymentInfo.pageSize) {
-      case "full":
-        return { width: "calc(100% - 64px)", height: "calc(100% - 64px)", top: "32px", left: "32px" }
-      case "half":
-        return { width: "calc(100% - 64px)", height: "calc(50% - 48px)", top: "32px", left: "32px" }
-      case "quarter":
-        return { width: "calc(100% - 64px)", height: "calc(33% - 40px)", top: "32px", left: "32px" }
-      default:
-        return { width: "calc(100% - 64px)", height: "calc(100% - 64px)", top: "32px", left: "32px" }
-    }
-  }
-
-  const frameArea = getFrameArea()
   const writableArea = getWritableArea()
 
   return (
@@ -250,7 +192,6 @@ export default function ConfirmPage({ params }: ConfirmPageProps) {
                 送信内容
               </div>
               <div className="relative w-full aspect-square max-w-md mx-auto">
-                {/* Message book page background changed to image */}
                 <div
                   className="absolute inset-0 rounded-lg shadow-2xl border-2 border-gray-200 overflow-visible"
                   style={{
@@ -259,10 +200,8 @@ export default function ConfirmPage({ params }: ConfirmPageProps) {
                     backgroundPosition: "center",
                   }}
                 >
-                  {/* Left binding effect */}
                   <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-gray-200/50 to-transparent z-[5]"></div>
 
-                  {/* Writable area background changed to pure white */}
                   <div
                     className="absolute p-3 overflow-hidden bg-white z-[1]"
                     style={{
@@ -272,7 +211,6 @@ export default function ConfirmPage({ params }: ConfirmPageProps) {
                       left: writableArea.left,
                     }}
                   >
-                    {/* Frame image inside white area */}
                     {selectedFrameData.image && (
                       <div
                         className="absolute inset-0 pointer-events-none z-[5]"
@@ -326,28 +264,19 @@ export default function ConfirmPage({ params }: ConfirmPageProps) {
                       ))}
                     </div>
                   )}
-
-                  {/* Page size label */}
-                  <div className="absolute bottom-2 right-4 text-xs text-gray-400 font-serif z-[5] leading-none scale-y-50 origin-bottom">
-                    {pageSizeLabel}
-                  </div>
                 </div>
               </div>
             </div>
 
             <div className="bg-primary/5 p-3 rounded-lg space-y-2">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">ページサイズ</span>
-                <span className="font-medium">{pageSizeLabel}</span>
-              </div>
-              <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">フレーム</span>
                 <span className="font-medium">{selectedFrameData.label}</span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">ギフティングスタンプ</span>
+                <span className="text-muted-foreground">スタンプ購入で貢献</span>
                 <span className="font-medium">
-                  {paymentInfo.stamps.length > 0 ? paymentInfo.stamps.join(" ") : "なし"}
+                  {paymentInfo.stamps.length > 0 ? `⭐ × ${paymentInfo.stamps.length}` : "なし"}
                 </span>
               </div>
               <div className="flex items-center justify-between">

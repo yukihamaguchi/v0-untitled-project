@@ -7,10 +7,13 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { useRouter } from "next/navigation"
-import { BanknoteIcon, SendIcon, BookOpenIcon, SparklesIcon, FrameIcon, UserIcon } from "lucide-react"
+import { useRouter } from 'next/navigation'
+import { BanknoteIcon, SendIcon, BookOpenIcon, SparklesIcon, UserIcon, MinusIcon, PlusIcon } from 'lucide-react'
 import { RippleButton } from "./ripple-button"
 import { savePaymentInfo } from "@/utils/payment"
+import { STAMPS, MAX_MESSAGE_LENGTH } from "@/lib/constants"
+import { calculateTotalPoints } from "@/lib/utils/points"
+import type { StampId } from "@/lib/constants"
 
 interface TipFormProps {
   eventId: number
@@ -19,71 +22,49 @@ interface TipFormProps {
   paypayId: string
 }
 
-const PAGE_SIZES = [
-  { value: "full", label: "1ページ", description: "150文字まで", maxLength: 150 },
-  { value: "half", label: "1/2ページ", description: "64文字まで", maxLength: 64 },
-  { value: "quarter", label: "1/4ページ", description: "36文字まで", maxLength: 36 },
-] as const
-
-const FRAMES = [
-  {
-    value: "none",
-    label: "フレームなし",
-    points: 0,
-    image: null,
-  },
-  {
-    value: "flower",
-    label: "フラワーフレーム",
-    points: 500,
-    image: "/images/frame-flower.png",
-  },
-  {
-    value: "autumn",
-    label: "オータムフレーム",
-    points: 500,
-    image: "/images/frame-autumn.png",
-  },
-] as const
-
-const STAMPS = [
-  { emoji: "👏", label: "拍手", points: 500 },
-  { emoji: "⭐", label: "スター", points: 1000 },
-  { emoji: "❤️", label: "ハート", points: 2000 },
-  { emoji: "🎉", label: "クラッカー", points: 5000 },
-] as const
-
 export function TipForm({ eventId, performerId, performerName, paypayId }: TipFormProps) {
   const router = useRouter()
-  const [pageSize, setPageSize] = useState<string>("full")
-  const [selectedFrame, setSelectedFrame] = useState<string>("none")
+  const [selectedFrame, setSelectedFrame] = useState<"none" | "with">("none")
   const [comment, setComment] = useState<string>("")
-  const [selectedStamps, setSelectedStamps] = useState<string[]>([])
+  const [stampCart, setStampCart] = useState<Record<StampId, number>>({})
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
   const [senderName, setSenderName] = useState<string>("")
-  const [senderAvatar, setSenderAvatar] = useState<string>("/images/default-avatar.jpg")
+  const [senderAvatar] = useState<string>("/images/default-avatar.jpg")
 
-  const stampPoints = selectedStamps.reduce((total, stampEmoji) => {
-    const stamp = STAMPS.find((s) => s.emoji === stampEmoji)
-    return total + (stamp?.points || 0)
+  const framePoints = selectedFrame === "with" ? 500 : 0
+  const stampPoints = Object.entries(stampCart).reduce((sum, [stampId, qty]) => {
+    const stamp = STAMPS.find(s => s.id === stampId)
+    return sum + (stamp ? stamp.points * qty : 0)
   }, 0)
-
-  const selectedFrameData = FRAMES.find((f) => f.value === selectedFrame) || FRAMES[0]
-  const totalAmount = stampPoints + selectedFrameData.points
-  const currentPageSize = PAGE_SIZES.find((s) => s.value === pageSize) || PAGE_SIZES[0]
+  const totalAmount = stampPoints + framePoints
 
   const handleCommentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newComment = e.target.value
-    setComment(newComment)
+    const newValue = e.target.value
+    if (newValue.length <= MAX_MESSAGE_LENGTH) {
+      setComment(newValue)
+    }
   }
 
-  const toggleStamp = (stampEmoji: string) => {
-    setSelectedStamps((prev) => {
-      if (prev.includes(stampEmoji)) {
-        return prev.filter((s) => s !== stampEmoji)
-      } else {
-        return [...prev, stampEmoji]
+  const handleStampClick = (stampId: StampId) => {
+    setStampCart(prev => {
+      if (!prev[stampId]) {
+        return { ...prev, [stampId]: 1 }
       }
+      return prev
+    })
+  }
+
+  const updateStampQuantity = (stampId: StampId, change: number) => {
+    setStampCart(prev => {
+      const currentQty = prev[stampId] || 0
+      const newQty = Math.max(0, currentQty + change)
+      
+      if (newQty === 0) {
+        const { [stampId]: _, ...rest } = prev
+        return rest
+      }
+      
+      return { ...prev, [stampId]: newQty }
     })
   }
 
@@ -91,19 +72,29 @@ export function TipForm({ eventId, performerId, performerName, paypayId }: TipFo
     e.preventDefault()
     setIsSubmitting(true)
 
+    const selectedStamps: string[] = []
+    for (const [stampId, quantity] of Object.entries(stampCart)) {
+      const stamp = STAMPS.find((s) => s.id === stampId)
+      if (stamp) {
+        for (let i = 0; i < quantity; i++) {
+          selectedStamps.push(stamp.emoji)
+        }
+      }
+    }
+
     const paymentInfo = {
       eventId,
       performerId,
       performerName,
       amount: totalAmount.toString(),
       comment,
-      pageSize,
       frameType: selectedFrame,
-      framePoints: selectedFrameData.points,
+      framePoints: framePoints,
       stamps: selectedStamps,
-      stampPoints,
+      stampPoints: stampPoints,
       senderName,
       senderAvatar,
+      stampCart,
     }
     savePaymentInfo(paymentInfo)
 
@@ -113,34 +104,7 @@ export function TipForm({ eventId, performerId, performerName, paypayId }: TipFo
     }, 500)
   }
 
-  const getFrameArea = () => {
-    switch (pageSize) {
-      case "full":
-        return { width: "calc(100% - 48px)", height: "calc(100% - 48px)", top: "24px", left: "24px" }
-      case "half":
-        return { width: "calc(100% - 48px)", height: "calc(50% - 36px)", top: "24px", left: "24px" }
-      case "quarter":
-        return { width: "calc(100% - 48px)", height: "calc(33% - 30px)", top: "24px", left: "24px" }
-      default:
-        return { width: "calc(100% - 48px)", height: "calc(100% - 48px)", top: "24px", left: "24px" }
-    }
-  }
-
-  const getWritableArea = () => {
-    switch (pageSize) {
-      case "full":
-        return { width: "calc(100% - 64px)", height: "calc(100% - 64px)", top: "32px", left: "32px" }
-      case "half":
-        return { width: "calc(100% - 64px)", height: "calc(50% - 48px)", top: "32px", left: "32px" }
-      case "quarter":
-        return { width: "calc(100% - 64px)", height: "calc(33% - 40px)", top: "32px", left: "32px" }
-      default:
-        return { width: "calc(100% - 64px)", height: "calc(100% - 64px)", top: "32px", left: "32px" }
-    }
-  }
-
-  const frameArea = getFrameArea()
-  const writableArea = getWritableArea()
+  const totalItems = Object.values(stampCart).reduce((sum, qty) => sum + qty, 0)
 
   return (
     <div>
@@ -176,191 +140,134 @@ export function TipForm({ eventId, performerId, performerName, paypayId }: TipFo
             </div>
 
             <div>
-              <Label className="text-xs font-medium mb-2 block">ページサイズ</Label>
-              <div className="grid grid-cols-3 gap-2">
-                {PAGE_SIZES.map((size) => (
-                  <button
-                    key={size.value}
-                    type="button"
-                    onClick={() => setPageSize(size.value)}
-                    className={`p-2.5 rounded-lg border-2 transition-all ${
-                      pageSize === size.value
-                        ? "border-primary bg-primary/10 shadow-md"
-                        : "border-border bg-white/70 hover:border-primary/50"
-                    }`}
-                  >
-                    <div className="text-xs font-medium mb-1">{size.label}</div>
-                    <div className="text-[10px] text-muted-foreground">{size.description}</div>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <Label className="text-xs font-medium mb-2 block flex items-center gap-1">
-                <FrameIcon className="h-3 w-3 text-primary" />
-                フレームを選択
-              </Label>
-              <div className="grid grid-cols-2 gap-2">
-                {FRAMES.map((frame) => (
-                  <button
-                    key={frame.value}
-                    type="button"
-                    onClick={() => setSelectedFrame(frame.value)}
-                    className={`p-2.5 rounded-lg border-2 transition-all ${
-                      selectedFrame === frame.value
-                        ? "border-primary bg-primary/10 shadow-md"
-                        : "border-border bg-white/70 hover:border-primary/50"
-                    }`}
-                  >
-                    <div className="text-xs font-medium mb-1">{frame.label}</div>
-                    <div className="text-[10px] font-bold text-primary">{frame.points}pt</div>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <Label className="text-xs font-medium mb-2 block flex items-center justify-between">
+              <Label htmlFor="comment" className="text-sm font-semibold mb-2 block flex items-center justify-between">
                 <span>メッセージを記入</span>
-                <span className="text-muted-foreground">
-                  {comment.length}/{currentPageSize.maxLength}文字
+                <span className="text-muted-foreground text-xs font-normal">
+                  {comment.length}/{MAX_MESSAGE_LENGTH}文字
                 </span>
               </Label>
-              <div className="relative w-full aspect-square max-w-md mx-auto">
-                <div
-                  className="absolute inset-0 rounded-lg shadow-2xl border-2 border-gray-200"
-                  style={{
-                    backgroundImage: "url(/images/page-background.jpg)",
-                    backgroundSize: "cover",
-                    backgroundPosition: "center",
-                  }}
-                >
-                  {/* Left binding effect */}
-                  <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-gray-200/50 to-transparent"></div>
-
-                  <div
-                    className="absolute border-2 border-dashed border-primary/40 bg-white rounded transition-all duration-300 z-[1]"
-                    style={{
-                      width: writableArea.width,
-                      height: writableArea.height,
-                      top: writableArea.top,
-                      left: writableArea.left,
-                    }}
-                  >
-                    {selectedFrameData.image && (
-                      <div
-                        className="absolute inset-0 pointer-events-none z-[5]"
-                        style={{
-                          backgroundImage: `url(${selectedFrameData.image})`,
-                          backgroundSize: "100% 100%",
-                          backgroundPosition: "center",
-                          backgroundRepeat: "no-repeat",
-                        }}
-                      />
-                    )}
-
-                    {senderName && (
-                      <div className="absolute top-2 left-2 flex items-center gap-2 bg-white/90 px-2 py-1 rounded-lg z-10">
-                        <img
-                          src={senderAvatar || "/placeholder.svg"}
-                          alt={senderName}
-                          className="w-8 h-8 rounded-full object-cover border-2 border-primary/20"
-                        />
-                        <span className="text-xs font-medium text-gray-700">{senderName}</span>
-                      </div>
-                    )}
-                    <div className="absolute top-1 right-1 text-[10px] text-primary/60 font-medium bg-white/80 px-1 rounded z-10">
-                      記入エリア
-                    </div>
-                  </div>
-
-                  <div
-                    className="absolute p-3 overflow-hidden z-20"
-                    style={{
-                      width: writableArea.width,
-                      height: writableArea.height,
-                      top: writableArea.top,
-                      left: writableArea.left,
-                      paddingTop: senderName ? "48px" : "12px",
-                    }}
-                  >
-                    <Textarea
-                      id="comment"
-                      placeholder="応援メッセージを入力してください"
-                      value={comment}
-                      onChange={handleCommentChange}
-                      maxLength={currentPageSize.maxLength}
-                      className="w-full h-full resize-none bg-white border-none focus-visible:ring-0 focus-visible:ring-offset-0 text-sm leading-relaxed font-serif overflow-hidden"
-                      style={{
-                        textShadow: "0 0 1px rgba(0,0,0,0.1)",
-                        color: "#7c3aed",
-                      }}
-                    />
-                  </div>
-
-                  {selectedStamps.length > 0 && (
-                    <div
-                      className="absolute z-30 flex gap-1 items-center justify-center flex-wrap px-2"
-                      style={{
-                        width: writableArea.width,
-                        left: writableArea.left,
-                        bottom: `calc(100% - ${writableArea.top} - ${writableArea.height} + 8px)`,
-                      }}
-                    >
-                      {selectedStamps.map((stampEmoji, i) => (
-                        <div
-                          key={i}
-                          className="text-xl drop-shadow-lg animate-fade-in"
-                          style={{ animationDelay: `${i * 0.05}s` }}
-                        >
-                          {stampEmoji}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Page size label */}
-                  <div className="absolute bottom-2 right-4 text-xs text-gray-400 font-serif leading-none scale-y-50 origin-bottom">
-                    {PAGE_SIZES.find((s) => s.value === pageSize)?.label}
-                  </div>
-                </div>
-              </div>
+              <Textarea
+                id="comment"
+                placeholder="応援メッセージを入力してください"
+                value={comment}
+                onChange={handleCommentChange}
+                maxLength={MAX_MESSAGE_LENGTH}
+                className="w-full min-h-[160px] resize-none bg-white border-2 border-border focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 text-base leading-relaxed p-3 rounded-lg"
+                rows={8}
+              />
             </div>
 
-            <div>
-              <Label className="text-xs font-medium mb-1.5 block flex items-center gap-1">
-                <SparklesIcon className="h-3 w-3 text-primary" />
-                ギフティングスタンプ
+            <div className="border-t pt-3">
+              <Label className="text-[10px] font-normal mb-2 block flex items-center gap-1 text-muted-foreground">
+                <SparklesIcon className="h-2.5 w-2.5" />
+                スタンプ購入で応援（任意）
               </Label>
-              <div className="grid grid-cols-4 gap-1.5">
-                {STAMPS.map((stamp) => (
-                  <button
-                    key={stamp.emoji}
-                    type="button"
-                    onClick={() => toggleStamp(stamp.emoji)}
-                    className={`p-2 rounded-lg border-2 transition-all ${
-                      selectedStamps.includes(stamp.emoji)
-                        ? "border-primary bg-primary/10 shadow-md scale-105"
-                        : "border-border bg-white/70 hover:border-primary/50"
-                    }`}
-                  >
-                    <div className="text-xl mb-0.5">{stamp.emoji}</div>
-                    <div className="text-[10px] font-bold text-primary">{stamp.points}pt</div>
-                  </button>
-                ))}
+              <div className="flex flex-col gap-2">
+                {STAMPS.map((stamp) => {
+                  const quantity = stampCart[stamp.id] || 0
+                  const isSelected = quantity > 0
+                  return (
+                    <div
+                      key={stamp.id}
+                      onClick={() => !isSelected && handleStampClick(stamp.id)}
+                      className={`
+                        relative rounded-lg border p-2.5 transition-all cursor-pointer
+                        ${isSelected 
+                          ? "bg-primary/5 border-primary/50 shadow-sm" 
+                          : "bg-muted/20 border-border/50 hover:border-primary/30 hover:bg-muted/30"
+                        }
+                      `}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xl">{stamp.emoji}</span>
+                          <div>
+                            <div className="text-sm font-medium">{stamp.label}</div>
+                            <div className="text-xs text-muted-foreground">{stamp.points.toLocaleString()}円</div>
+                          </div>
+                        </div>
+                        
+                        {isSelected && (
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                updateStampQuantity(stamp.id, -1)
+                              }}
+                              className="w-6 h-6 rounded-full border border-primary bg-white hover:bg-primary/10 flex items-center justify-center transition-colors"
+                              aria-label="減らす"
+                            >
+                              <MinusIcon className="h-3 w-3 text-primary" />
+                            </button>
+                            <span className="text-sm font-semibold min-w-[1.5rem] text-center text-primary">{quantity}</span>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                updateStampQuantity(stamp.id, 1)
+                              }}
+                              className="w-6 h-6 rounded-full border border-primary bg-white hover:bg-primary/10 flex items-center justify-center transition-colors"
+                              aria-label="増やす"
+                            >
+                              <PlusIcon className="h-3 w-3 text-primary" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
             </div>
 
-            <div className="bg-primary/5 p-3 rounded-lg border border-primary/20">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">合計ポイント</span>
-                <div className="flex items-center gap-1">
-                  <BanknoteIcon className="h-4 w-4 text-primary" />
-                  <span className="text-lg font-bold text-primary">{totalAmount.toLocaleString()}pt</span>
-                </div>
+            <div className="border-t pt-3">
+              <Label className="text-xs font-medium mb-2 block">
+                フレームを購入して主催者を応援
+              </Label>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSelectedFrame("none")}
+                  className={`
+                    flex-1 rounded-lg border p-3 transition-all
+                    ${selectedFrame === "none"
+                      ? "bg-primary/5 border-primary/50 shadow-sm"
+                      : "bg-muted/20 border-border/50 hover:border-primary/30"
+                    }
+                  `}
+                >
+                  <div className="text-sm font-medium">なし</div>
+                  <div className="text-xs text-muted-foreground">0円</div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedFrame("with")}
+                  className={`
+                    flex-1 rounded-lg border p-3 transition-all
+                    ${selectedFrame === "with"
+                      ? "bg-primary/5 border-primary/50 shadow-sm"
+                      : "bg-muted/20 border-border/50 hover:border-primary/30"
+                    }
+                  `}
+                >
+                  <div className="text-sm font-medium">あり</div>
+                  <div className="text-xs text-muted-foreground">500円</div>
+                </button>
               </div>
             </div>
+
+            {(totalItems > 0 || selectedFrame === "with") && (
+              <div className="bg-primary/5 px-2 py-1.5 rounded border border-primary/20">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium">合計</span>
+                  <div className="flex items-center gap-1">
+                    <BanknoteIcon className="h-3 w-3 text-primary" />
+                    <span className="text-sm font-bold text-primary">{totalAmount.toLocaleString()}円</span>
+                  </div>
+                </div>
+              </div>
+            )}
           </CardContent>
           <CardFooter className="bg-muted/20 border-t p-3">
             <RippleButton type="submit" className="w-full gap-1 rounded-full h-9 text-sm" disabled={isSubmitting}>

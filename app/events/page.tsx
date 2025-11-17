@@ -2,14 +2,14 @@
 
 import { EventCard } from "@/components/event-card"
 import { Input } from "@/components/ui/input"
-import { Search } from "lucide-react"
+import { Search } from 'lucide-react'
 
 export default function EventsPage() {
   // 仮のイベントデータ
   const events = [
     {
       id: 1,
-      title: "サマーフェス2025",
+      title: "【阪神店】喫茶しーぷいへようこそ！",
       date: "2025-07-20",
       location: "さいたまスーパーアリーナ",
       image: "/images/concert.png",

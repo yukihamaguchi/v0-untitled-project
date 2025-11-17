@@ -1,5 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card"
-import { CalendarIcon, MapPinIcon } from "lucide-react"
+import { CalendarIcon, MapPinIcon } from 'lucide-react'
 import Image from "next/image"
 import Link from "next/link"
 import { AnimatedCard } from "./animated-card"
@@ -19,7 +19,7 @@ interface EventCardProps {
 export function EventCard({ event, index = 0 }: EventCardProps) {
   return (
     <AnimatedCard delay={index}>
-      <Link href={`/events/${event.id}`}>
+      <Link href={`/events/${event.id}/send`}>
         <Card className="overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border-none shadow-md w-full">
           <div className="relative">
             <Image

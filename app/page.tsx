@@ -7,7 +7,7 @@ export default function Home() {
   const events = [
     {
       id: 1,
-      title: "サマーフェス2025",
+      title: "【阪神店】喫茶しーぷいへようこそ！",
       date: "2025-07-20",
       location: "さいたまスーパーアリーナ",
       image: "/images/concert.png",

@@ -5,40 +5,31 @@ import { PerformerCard } from "@/components/performer-card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export default function FollowingPage() {
-  // フォロー中の出演者データ
   const performers = [
     {
       id: 1,
-      name: "天野 しずく",
+      name: "河西健吾",
       occupation: "声優",
-      agency: "ドリームボイス",
+      agency: "マウスプロモーション",
       image: "/images/performer-1.jpeg",
     },
     {
       id: 2,
-      name: "早乙女 みなと",
+      name: "高塚智人",
       occupation: "声優",
-      agency: "ステラボイス",
+      agency: "マウスプロモーション",
       image: "/images/performer-2.jpeg",
-    },
-    {
-      id: 3,
-      name: "有栖川 りお",
-      occupation: "声優",
-      agency: "ムーンライト",
-      image: "/images/performer-3.jpeg",
     },
   ]
 
-  // フォロー中の出演者のイベントデータ
   const events = [
     {
       id: 1,
-      title: "サマーフェス2025",
+      title: "【阪神店】喫茶しーぷいへようこそ！",
       date: "2025-07-20",
       location: "さいたまスーパーアリーナ",
       image: "/images/concert.png",
-      performers: ["天野 しずく", "早乙女 みなと"],
+      performers: ["河西健吾", "高塚智人"],
     },
     {
       id: 2,
@@ -46,7 +37,7 @@ export default function FollowingPage() {
       date: "2025-07-26",
       location: "横浜アリーナ",
       image: "/images/concert-lights.jpeg",
-      performers: ["有栖川 りお"],
+      performers: ["河西健吾"],
     },
     {
       id: 3,
@@ -54,7 +45,7 @@ export default function FollowingPage() {
       date: "2025-07-27",
       location: "サイエンスホール",
       image: "/images/concert-audience.jpeg",
-      performers: ["天野 しずく"],
+      performers: ["高塚智人"],
     },
   ]
 

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { getUserSession } from "@/utils/auth"
 import { getEventGiftings } from "@/app/actions/gifting-actions"
 import { useToast } from "@/hooks/use-toast"
+import { FRAMES } from "@/lib/constants"
 import type { GiftingData } from "@/lib/supabase"
 
 interface PDFPageProps {
@@ -12,27 +13,6 @@ interface PDFPageProps {
     id: string
   }
 }
-
-const FRAMES = [
-  {
-    value: "none",
-    label: "フレームなし",
-    points: 0,
-    image: null,
-  },
-  {
-    value: "flower",
-    label: "フラワーフレーム",
-    points: 500,
-    image: "/images/frame-flower.png",
-  },
-  {
-    value: "autumn",
-    label: "オータムフレーム",
-    points: 500,
-    image: "/images/frame-autumn.png",
-  },
-] as const
 
 export default function PDFPage({ params }: PDFPageProps) {
   const router = useRouter()
@@ -109,24 +89,30 @@ export default function PDFPage({ params }: PDFPageProps) {
 
         const getWritableAreaStyle = () => {
           switch (message.page_size) {
+            case "sixteenth":
+              // 4×4グリッドの左上の正方形（25%幅、25%高さ）
+              return "position: absolute; top: 60px; left: 60px; width: calc(25% - 40px); height: calc(25% - 40px); background: #FFFFFF;"
             case "quarter":
-              return "position: absolute; top: 60px; left: 60px; right: 60px; height: calc(33% - 40px); background: #FFFFFF;"
-            case "half":
-              return "position: absolute; top: 60px; left: 60px; right: 60px; height: calc(50% - 60px); background: #FFFFFF;"
+              // 2×2グリッドの左上の正方形（50%幅、50%高さ）
+              return "position: absolute; top: 60px; left: 60px; width: calc(50% - 60px); height: calc(50% - 60px); background: #FFFFFF;"
             case "full":
             default:
+              // 正方形全体
               return "position: absolute; top: 60px; left: 60px; right: 60px; bottom: 60px; background: #FFFFFF;"
           }
         }
 
         const getFrameAreaStyle = () => {
           switch (message.page_size) {
+            case "sixteenth":
+              // 4×4グリッドの左上の正方形用フレーム
+              return "position: absolute; top: 30px; left: 30px; width: calc(25% - 30px); height: calc(25% - 30px); pointer-events: none; z-index: 10;"
             case "quarter":
-              return "position: absolute; top: 30px; left: 30px; right: 30px; height: calc(33% - 30px); pointer-events: none; z-index: 10;"
-            case "half":
-              return "position: absolute; top: 30px; left: 30px; right: 30px; height: calc(50% - 30px); pointer-events: none; z-index: 10;"
+              // 2×2グリッドの左上の正方形用フレーム
+              return "position: absolute; top: 30px; left: 30px; width: calc(50% - 40px); height: calc(50% - 40px); pointer-events: none; z-index: 10;"
             case "full":
             default:
+              // 正方形全体用フレーム
               return "position: absolute; top: 30px; left: 30px; right: 30px; bottom: 30px; pointer-events: none; z-index: 10;"
           }
         }
