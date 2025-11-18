@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { PerformerCard } from "@/components/performer-card"
 import Image from "next/image"
 import Link from "next/link"
-import { CalendarIcon, ChevronLeft, MapPinIcon, SendIcon } from 'lucide-react'
+import { CalendarIcon, ChevronLeft, MapPinIcon, SendIcon } from "lucide-react"
 
 interface EventPageProps {
   params: {
@@ -18,7 +18,7 @@ export default function EventPage({ params }: EventPageProps) {
   const events = {
     "1": {
       id: 1,
-      title: "【阪神店】喫茶しーぷいへようこそ！",
+      title: "サマーフェス2025",
       date: "2025-07-20",
       location: "さいたまスーパーアリーナ",
       description: "2025年夏最大の音楽フェスティバル。様々なジャンルのアーティストが集結します。",
@@ -48,17 +48,31 @@ export default function EventPage({ params }: EventPageProps) {
   const performers = [
     {
       id: 1,
-      name: "河西健吾",
+      name: "天野 しずく",
       occupation: "声優",
-      agency: "マウスプロモーション",
+      agency: "ドリームボイス",
       image: "/images/performer-1.jpeg",
     },
     {
       id: 2,
-      name: "高塚智人",
+      name: "早乙女 みなと",
       occupation: "声優",
-      agency: "マウスプロモーション",
+      agency: "ステラボイス",
       image: "/images/performer-2.jpeg",
+    },
+    {
+      id: 3,
+      name: "有栖川 りお",
+      occupation: "声優",
+      agency: "ムーンライト",
+      image: "/images/performer-3.jpeg",
+    },
+    {
+      id: 4,
+      name: "白石 ほのか",
+      occupation: "声優",
+      agency: "サンシャイン",
+      image: "/images/performer-4.jpeg",
     },
   ]
 

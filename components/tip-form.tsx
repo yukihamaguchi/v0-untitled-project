@@ -7,13 +7,13 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { useRouter } from 'next/navigation'
-import { BanknoteIcon, SendIcon, BookOpenIcon, SparklesIcon, UserIcon, MinusIcon, PlusIcon } from 'lucide-react'
+import { useRouter } from "next/navigation"
+import { BanknoteIcon, SendIcon, BookOpenIcon, SparklesIcon, UserIcon } from "lucide-react"
 import { RippleButton } from "./ripple-button"
 import { savePaymentInfo } from "@/utils/payment"
-import { STAMPS, MAX_MESSAGE_LENGTH } from "@/lib/constants"
+import { PAGE_SIZES, FRAMES } from "@/lib/constants"
 import { calculateTotalPoints } from "@/lib/utils/points"
-import type { StampId } from "@/lib/constants"
+import { getWritableArea } from "@/lib/utils/message-layout"
 
 interface TipFormProps {
   eventId: number
@@ -24,63 +24,42 @@ interface TipFormProps {
 
 export function TipForm({ eventId, performerId, performerName, paypayId }: TipFormProps) {
   const router = useRouter()
-  const [selectedFrame, setSelectedFrame] = useState<"none" | "with">("none")
+  const [pageSize, setPageSize] = useState<string>("sixteenth")
+  const [selectedFrame, setSelectedFrame] = useState<string>("none")
   const [comment, setComment] = useState<string>("")
-  const [stampCart, setStampCart] = useState<Record<StampId, number>>({})
+  const [selectedStamps, setSelectedStamps] = useState<string[]>([])
+  const [stampQuantity, setStampQuantity] = useState<number>(0)
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
   const [senderName, setSenderName] = useState<string>("")
-  const [senderAvatar] = useState<string>("/images/default-avatar.jpg")
+  const [senderAvatar, setSenderAvatar] = useState<string>("/images/default-avatar.jpg")
+  const [animatingStars, setAnimatingStars] = useState<number[]>([])
 
-  const framePoints = selectedFrame === "with" ? 500 : 0
-  const stampPoints = Object.entries(stampCart).reduce((sum, [stampId, qty]) => {
-    const stamp = STAMPS.find(s => s.id === stampId)
-    return sum + (stamp ? stamp.points * qty : 0)
-  }, 0)
-  const totalAmount = stampPoints + framePoints
+  const totalAmount = calculateTotalPoints(selectedStamps, selectedFrame as any)
+  const selectedFrameData = FRAMES.find((f) => f.value === selectedFrame) || FRAMES[0]
+  const currentPageSize = PAGE_SIZES.find((s) => s.value === pageSize) || PAGE_SIZES[0]
 
   const handleCommentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value
-    if (newValue.length <= MAX_MESSAGE_LENGTH) {
+    if (newValue.length <= currentPageSize.maxLength) {
       setComment(newValue)
     }
   }
 
-  const handleStampClick = (stampId: StampId) => {
-    setStampCart(prev => {
-      if (!prev[stampId]) {
-        return { ...prev, [stampId]: 1 }
-      }
-      return prev
-    })
-  }
+  const handleStampQuantityChange = (change: number) => {
+    const newQuantity = Math.max(0, stampQuantity + change)
+    setStampQuantity(newQuantity)
+    setSelectedStamps(Array(newQuantity).fill("⭐"))
 
-  const updateStampQuantity = (stampId: StampId, change: number) => {
-    setStampCart(prev => {
-      const currentQty = prev[stampId] || 0
-      const newQty = Math.max(0, currentQty + change)
-      
-      if (newQty === 0) {
-        const { [stampId]: _, ...rest } = prev
-        return rest
-      }
-      
-      return { ...prev, [stampId]: newQty }
-    })
+    if (change > 0) {
+      const newStarIndices = Array.from({ length: change }, (_, i) => stampQuantity + i)
+      setAnimatingStars(newStarIndices)
+      setTimeout(() => setAnimatingStars([]), 600)
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
-
-    const selectedStamps: string[] = []
-    for (const [stampId, quantity] of Object.entries(stampCart)) {
-      const stamp = STAMPS.find((s) => s.id === stampId)
-      if (stamp) {
-        for (let i = 0; i < quantity; i++) {
-          selectedStamps.push(stamp.emoji)
-        }
-      }
-    }
 
     const paymentInfo = {
       eventId,
@@ -88,13 +67,13 @@ export function TipForm({ eventId, performerId, performerName, paypayId }: TipFo
       performerName,
       amount: totalAmount.toString(),
       comment,
+      pageSize,
       frameType: selectedFrame,
-      framePoints: framePoints,
+      framePoints: selectedFrameData.points,
       stamps: selectedStamps,
-      stampPoints: stampPoints,
+      stampPoints: totalAmount - selectedFrameData.points,
       senderName,
       senderAvatar,
-      stampCart,
     }
     savePaymentInfo(paymentInfo)
 
@@ -104,7 +83,43 @@ export function TipForm({ eventId, performerId, performerName, paypayId }: TipFo
     }, 500)
   }
 
-  const totalItems = Object.values(stampCart).reduce((sum, qty) => sum + qty, 0)
+  const writableArea = getWritableArea(pageSize as any)
+
+  const PageSizeIcon = ({ size }: { size: string }) => {
+    if (size === "full") {
+      return <div className="w-10 h-10 mx-auto mb-1.5 border-2 border-current rounded"></div>
+    } else if (size === "quarter") {
+      return (
+        <div className="w-10 h-10 mx-auto mb-1.5 grid grid-cols-2 grid-rows-2 gap-0.5 border-2 border-current rounded p-0.5">
+          <div className="bg-current"></div>
+          <div className="border border-current/30"></div>
+          <div className="border border-current/30"></div>
+          <div className="border border-current/30"></div>
+        </div>
+      )
+    } else {
+      return (
+        <div className="w-10 h-10 mx-auto mb-1.5 grid grid-cols-4 grid-rows-4 gap-0.5 border-2 border-current rounded p-0.5">
+          <div className="bg-current"></div>
+          <div className="border border-current/20"></div>
+          <div className="border border-current/20"></div>
+          <div className="border border-current/20"></div>
+          <div className="border border-current/20"></div>
+          <div className="border border-current/20"></div>
+          <div className="border border-current/20"></div>
+          <div className="border border-current/20"></div>
+          <div className="border border-current/20"></div>
+          <div className="border border-current/20"></div>
+          <div className="border border-current/20"></div>
+          <div className="border border-current/20"></div>
+          <div className="border border-current/20"></div>
+          <div className="border border-current/20"></div>
+          <div className="border border-current/20"></div>
+          <div className="border border-current/20"></div>
+        </div>
+      )
+    }
+  }
 
   return (
     <div>
@@ -140,10 +155,32 @@ export function TipForm({ eventId, performerId, performerName, paypayId }: TipFo
             </div>
 
             <div>
-              <Label htmlFor="comment" className="text-sm font-semibold mb-2 block flex items-center justify-between">
+              <Label className="text-xs font-medium mb-2 block">ページサイズ</Label>
+              <div className="grid grid-cols-3 gap-2">
+                {PAGE_SIZES.map((size) => (
+                  <button
+                    key={size.value}
+                    type="button"
+                    onClick={() => setPageSize(size.value)}
+                    className={`p-3 rounded-lg border-2 transition-all ${
+                      pageSize === size.value
+                        ? "border-primary bg-primary/10 shadow-md text-primary"
+                        : "border-border bg-white/70 hover:border-primary/50 text-muted-foreground"
+                    }`}
+                  >
+                    <PageSizeIcon size={size.value} />
+                    <div className="text-xs font-medium mb-0.5">{size.label}</div>
+                    <div className="text-[10px]">{size.description}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="comment" className="text-xs font-medium mb-2 block flex items-center justify-between">
                 <span>メッセージを記入</span>
-                <span className="text-muted-foreground text-xs font-normal">
-                  {comment.length}/{MAX_MESSAGE_LENGTH}文字
+                <span className="text-muted-foreground">
+                  {comment.length}/{currentPageSize.maxLength}文字
                 </span>
               </Label>
               <Textarea
@@ -151,123 +188,76 @@ export function TipForm({ eventId, performerId, performerName, paypayId }: TipFo
                 placeholder="応援メッセージを入力してください"
                 value={comment}
                 onChange={handleCommentChange}
-                maxLength={MAX_MESSAGE_LENGTH}
-                className="w-full min-h-[160px] resize-none bg-white border-2 border-border focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 text-base leading-relaxed p-3 rounded-lg"
-                rows={8}
+                maxLength={currentPageSize.maxLength}
+                className="w-full min-h-[120px] resize-none bg-white border-2 border-border focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 text-base leading-relaxed p-3 rounded-lg"
+                rows={6}
               />
             </div>
 
-            <div className="border-t pt-3">
-              <Label className="text-[10px] font-normal mb-2 block flex items-center gap-1 text-muted-foreground">
-                <SparklesIcon className="h-2.5 w-2.5" />
-                スタンプ購入で応援（任意）
+            <div>
+              <Label className="text-xs font-medium mb-1.5 block flex items-center gap-1">
+                <SparklesIcon className="h-3 w-3 text-primary" />
+                スタンプ購入で貢献
               </Label>
-              <div className="flex flex-col gap-2">
-                {STAMPS.map((stamp) => {
-                  const quantity = stampCart[stamp.id] || 0
-                  const isSelected = quantity > 0
-                  return (
-                    <div
-                      key={stamp.id}
-                      onClick={() => !isSelected && handleStampClick(stamp.id)}
-                      className={`
-                        relative rounded-lg border p-2.5 transition-all cursor-pointer
-                        ${isSelected 
-                          ? "bg-primary/5 border-primary/50 shadow-sm" 
-                          : "bg-muted/20 border-border/50 hover:border-primary/30 hover:bg-muted/30"
-                        }
-                      `}
+              <div className="bg-white/70 border-2 border-border rounded-lg p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl">⭐</span>
+                    <div className="text-xs text-muted-foreground">500pt / 個</div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => handleStampQuantityChange(-1)}
+                      disabled={stampQuantity === 0}
+                      className="w-8 h-8 rounded-full border-2 border-primary bg-white hover:bg-primary/10 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center font-bold text-primary transition-all"
                     >
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xl">{stamp.emoji}</span>
-                          <div>
-                            <div className="text-sm font-medium">{stamp.label}</div>
-                            <div className="text-xs text-muted-foreground">{stamp.points.toLocaleString()}円</div>
-                          </div>
-                        </div>
-                        
-                        {isSelected && (
-                          <div className="flex items-center gap-2">
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                updateStampQuantity(stamp.id, -1)
-                              }}
-                              className="w-6 h-6 rounded-full border border-primary bg-white hover:bg-primary/10 flex items-center justify-center transition-colors"
-                              aria-label="減らす"
-                            >
-                              <MinusIcon className="h-3 w-3 text-primary" />
-                            </button>
-                            <span className="text-sm font-semibold min-w-[1.5rem] text-center text-primary">{quantity}</span>
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                updateStampQuantity(stamp.id, 1)
-                              }}
-                              className="w-6 h-6 rounded-full border border-primary bg-white hover:bg-primary/10 flex items-center justify-center transition-colors"
-                              aria-label="増やす"
-                            >
-                              <PlusIcon className="h-3 w-3 text-primary" />
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-
-            <div className="border-t pt-3">
-              <Label className="text-xs font-medium mb-2 block">
-                フレームを購入して主催者を応援
-              </Label>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => setSelectedFrame("none")}
-                  className={`
-                    flex-1 rounded-lg border p-3 transition-all
-                    ${selectedFrame === "none"
-                      ? "bg-primary/5 border-primary/50 shadow-sm"
-                      : "bg-muted/20 border-border/50 hover:border-primary/30"
-                    }
-                  `}
-                >
-                  <div className="text-sm font-medium">なし</div>
-                  <div className="text-xs text-muted-foreground">0円</div>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSelectedFrame("with")}
-                  className={`
-                    flex-1 rounded-lg border p-3 transition-all
-                    ${selectedFrame === "with"
-                      ? "bg-primary/5 border-primary/50 shadow-sm"
-                      : "bg-muted/20 border-border/50 hover:border-primary/30"
-                    }
-                  `}
-                >
-                  <div className="text-sm font-medium">あり</div>
-                  <div className="text-xs text-muted-foreground">500円</div>
-                </button>
-              </div>
-            </div>
-
-            {(totalItems > 0 || selectedFrame === "with") && (
-              <div className="bg-primary/5 px-2 py-1.5 rounded border border-primary/20">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium">合計</span>
-                  <div className="flex items-center gap-1">
-                    <BanknoteIcon className="h-3 w-3 text-primary" />
-                    <span className="text-sm font-bold text-primary">{totalAmount.toLocaleString()}円</span>
+                      −
+                    </button>
+                    <span className="text-lg font-bold min-w-[2rem] text-center">{stampQuantity}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleStampQuantityChange(1)}
+                      className="w-8 h-8 rounded-full border-2 border-primary bg-white hover:bg-primary/10 flex items-center justify-center font-bold text-primary transition-all"
+                    >
+                      +
+                    </button>
                   </div>
                 </div>
+                {stampQuantity > 0 && (
+                  <div className="pt-3 border-t border-border">
+                    <div className="flex flex-wrap gap-1 justify-center mb-2">
+                      {Array.from({ length: stampQuantity }).map((_, index) => (
+                        <span
+                          key={index}
+                          className={`text-2xl inline-block ${animatingStars.includes(index) ? "animate-pop-in" : ""}`}
+                          style={{
+                            animationDelay: animatingStars.includes(index)
+                              ? `${(index - (stampQuantity - animatingStars.length)) * 100}ms`
+                              : "0ms",
+                          }}
+                        >
+                          ⭐
+                        </span>
+                      ))}
+                    </div>
+                    <div className="text-sm font-medium text-primary text-center">
+                      合計: {(stampQuantity * 500).toLocaleString()}pt
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
+            </div>
+
+            <div className="bg-primary/5 p-3 rounded-lg border border-primary/20">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">合計ポイント</span>
+                <div className="flex items-center gap-1">
+                  <BanknoteIcon className="h-4 w-4 text-primary" />
+                  <span className="text-lg font-bold text-primary">{totalAmount.toLocaleString()}pt</span>
+                </div>
+              </div>
+            </div>
           </CardContent>
           <CardFooter className="bg-muted/20 border-t p-3">
             <RippleButton type="submit" className="w-full gap-1 rounded-full h-9 text-sm" disabled={isSubmitting}>

@@ -1,3 +1,9 @@
+export const PAGE_SIZES = [
+  { value: "sixteenth", label: "1/16ページ", description: "40文字まで", maxLength: 40 },
+  { value: "quarter", label: "1/4ページ", description: "200文字まで", maxLength: 200 },
+  { value: "full", label: "1ページ", description: "1000文字まで", maxLength: 1000 },
+] as const
+
 export const FRAMES = [
   {
     value: "none",
@@ -7,16 +13,8 @@ export const FRAMES = [
   },
 ] as const
 
-export const STAMPS = [
-  { id: "coffee", emoji: "☕", label: "コーヒー", points: 500 },
-  { id: "softcream", emoji: "🍦", label: "ソフトクリーム", points: 800 },
-  { id: "melonsoda", emoji: "🍹", label: "メロンソーダ", points: 1000 },
-  { id: "pancake", emoji: "🥞", label: "パンケーキ", points: 2000 },
-  { id: "parfait", emoji: "🍨", label: "パフェ", points: 3000 },
-] as const
+export const STAMPS = [{ emoji: "⭐", points: 500 }] as const
 
+export type PageSizeValue = (typeof PAGE_SIZES)[number]["value"]
 export type FrameValue = (typeof FRAMES)[number]["value"]
-export type StampId = (typeof STAMPS)[number]["id"]
 export type StampEmoji = (typeof STAMPS)[number]["emoji"]
-
-export const MAX_MESSAGE_LENGTH = 500

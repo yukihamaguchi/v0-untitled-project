@@ -2,18 +2,18 @@
 
 import type React from "react"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { SparklesIcon, UserIcon, ShoppingCartIcon } from 'lucide-react'
+import { SparklesIcon, UserIcon } from "lucide-react"
 import Image from "next/image"
 import type { Recipient } from "@/types/recipient"
 import type { RecipientMessage } from "@/types/message"
-import { STAMPS, MAX_MESSAGE_LENGTH } from "@/lib/constants"
+import { PAGE_SIZES, FRAMES } from "@/lib/constants"
 import { calculateTotalPoints } from "@/lib/utils/points"
-import type { StampId } from "@/lib/constants"
+import { getWritableArea } from "@/lib/utils/message-layout"
 
 interface RecipientMessageFormProps {
   recipient: Recipient
@@ -28,57 +28,106 @@ export function RecipientMessageForm({
   defaultSenderName = "",
   defaultSenderAvatar = "/images/default-avatar.jpg",
 }: RecipientMessageFormProps) {
+  const [pageSize, setPageSize] = useState<string>("sixteenth")
+  const [selectedFrame, setSelectedFrame] = useState<string>("none")
   const [comment, setComment] = useState<string>("")
-  const [stampCart, setStampCart] = useState<Record<StampId, number>>({})
+  const [selectedStamps, setSelectedStamps] = useState<string[]>([])
+  const [stampQuantity, setStampQuantity] = useState<number>(0)
   const [senderName, setSenderName] = useState<string>(defaultSenderName)
   const [senderAvatar] = useState<string>(defaultSenderAvatar)
+  const [animatingStars, setAnimatingStars] = useState<number[]>([])
 
-  const totalPoints = calculateTotalPoints(stampCart, "none")
+  const currentPageSize = PAGE_SIZES.find((s) => s.value === pageSize) || PAGE_SIZES[0]
+  const selectedFrameData = FRAMES.find((f) => f.value === selectedFrame) || FRAMES[0]
 
+  const totalPoints = calculateTotalPoints(selectedStamps, selectedFrame as any)
+
+  // Notify parent of changes
   useEffect(() => {
-    const message: RecipientMessage = {
+    onChange({
       recipientId: recipient.id,
       recipientName: recipient.name,
       recipientRole: recipient.role,
       recipientImage: recipient.image || "",
-      selectedFrame: "none",
+      pageSize,
+      selectedFrame,
       comment,
-      selectedStamps: [],
-      stampCart,
+      selectedStamps,
       senderName,
       senderAvatar,
-    }
-    onChange(message)
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     recipient.id,
     recipient.name,
     recipient.role,
     recipient.image,
+    pageSize,
+    selectedFrame,
     comment,
-    stampCart,
+    selectedStamps,
     senderName,
     senderAvatar,
+    // Note: onChange is intentionally excluded from dependencies to prevent infinite loop
   ])
 
-  const updateStampQuantity = useCallback((stampId: StampId, change: number) => {
-    setStampCart(prev => {
-      const currentQty = prev[stampId] || 0
-      const newQty = Math.max(0, currentQty + change)
-      
-      if (newQty === 0) {
-        const { [stampId]: _, ...rest } = prev
-        return rest
-      }
-      
-      return { ...prev, [stampId]: newQty }
-    })
-  }, [])
+  const handleStampQuantityChange = (change: number) => {
+    const newQuantity = Math.max(0, stampQuantity + change)
+    setStampQuantity(newQuantity)
+    // Create array with star emoji repeated by quantity
+    setSelectedStamps(Array(newQuantity).fill("⭐"))
 
-  const handleCommentChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    if (change > 0) {
+      const newStarIndices = Array.from({ length: change }, (_, i) => stampQuantity + i)
+      setAnimatingStars(newStarIndices)
+      setTimeout(() => setAnimatingStars([]), 600)
+    }
+  }
+
+  const handleCommentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setComment(e.target.value)
-  }, [])
+  }
 
-  const totalItems = Object.values(stampCart).reduce((sum, qty) => sum + qty, 0)
+  const writableArea = getWritableArea(pageSize as any)
+
+  const PageSizeIcon = ({ size }: { size: string }) => {
+    if (size === "full") {
+      // 1ページ: 大きな正方形
+      return <div className="w-10 h-10 mx-auto mb-1.5 border-2 border-current rounded"></div>
+    } else if (size === "quarter") {
+      // 1/4ページ: 2×2グリッド、左上を強調
+      return (
+        <div className="w-10 h-10 mx-auto mb-1.5 grid grid-cols-2 grid-rows-2 gap-0.5 border-2 border-current rounded p-0.5">
+          <div className="bg-current"></div>
+          <div className="border border-current/30"></div>
+          <div className="border border-current/30"></div>
+          <div className="border border-current/30"></div>
+        </div>
+      )
+    } else {
+      // 1/16ページ: 4×4グリッド、左上を強調
+      return (
+        <div className="w-10 h-10 mx-auto mb-1.5 grid grid-cols-4 grid-rows-4 gap-0.5 border-2 border-current rounded p-0.5">
+          <div className="bg-current"></div>
+          <div className="border border-current/20"></div>
+          <div className="border border-current/20"></div>
+          <div className="border border-current/20"></div>
+          <div className="border border-current/20"></div>
+          <div className="border border-current/20"></div>
+          <div className="border border-current/20"></div>
+          <div className="border border-current/20"></div>
+          <div className="border border-current/20"></div>
+          <div className="border border-current/20"></div>
+          <div className="border border-current/20"></div>
+          <div className="border border-current/20"></div>
+          <div className="border border-current/20"></div>
+          <div className="border border-current/20"></div>
+          <div className="border border-current/20"></div>
+          <div className="border border-current/20"></div>
+        </div>
+      )
+    }
+  }
 
   return (
     <Card className="overflow-hidden border-none shadow-lg bg-gradient-to-br from-background to-primary/5">
@@ -126,13 +175,35 @@ export function RecipientMessageForm({
         </div>
 
         <div>
+          <Label className="text-xs font-medium mb-2 block">ページサイズ</Label>
+          <div className="grid grid-cols-3 gap-2">
+            {PAGE_SIZES.map((size) => (
+              <button
+                key={size.value}
+                type="button"
+                onClick={() => setPageSize(size.value)}
+                className={`p-3 rounded-lg border-2 transition-all ${
+                  pageSize === size.value
+                    ? "border-primary bg-primary/10 shadow-md text-primary"
+                    : "border-border bg-white/70 hover:border-primary/50 text-muted-foreground"
+                }`}
+              >
+                <PageSizeIcon size={size.value} />
+                <div className="text-xs font-medium mb-0.5">{size.label}</div>
+                <div className="text-[10px]">{size.description}</div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div>
           <Label
             htmlFor={`comment-${recipient.id}`}
             className="text-xs font-medium mb-2 block flex items-center justify-between"
           >
             <span>メッセージを記入</span>
             <span className="text-muted-foreground">
-              {comment.length}/{MAX_MESSAGE_LENGTH}文字
+              {comment.length}/{currentPageSize.maxLength}文字
             </span>
           </Label>
           <Textarea
@@ -140,81 +211,61 @@ export function RecipientMessageForm({
             placeholder="応援メッセージを入力してください"
             value={comment}
             onChange={handleCommentChange}
-            maxLength={MAX_MESSAGE_LENGTH}
+            maxLength={currentPageSize.maxLength}
             className="w-full min-h-[120px] resize-none bg-white border-2 border-border focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 text-base leading-relaxed p-3 rounded-lg"
             rows={6}
           />
         </div>
 
         <div>
-          <Label className="text-xs font-medium mb-2 block flex items-center gap-1">
+          <Label className="text-xs font-medium mb-1.5 block flex items-center gap-1">
             <SparklesIcon className="h-3 w-3 text-primary" />
-            スタンプをオーダーして貢献
+            スタンプ購入で貢献
           </Label>
-          <div className="bg-white/70 border border-border rounded-lg p-2">
-            <div className="space-y-1.5">
-              {STAMPS.map((stamp) => {
-                const quantity = stampCart[stamp.id] || 0
-                return (
-                  <div key={stamp.id} className="flex items-center justify-between p-2 bg-white rounded border border-border hover:border-primary/30 transition-colors">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xl">{stamp.emoji}</span>
-                      <div>
-                        <div className="font-medium text-xs">{stamp.label}</div>
-                        <div className="text-xs text-muted-foreground">{stamp.points.toLocaleString()}pt</div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => updateStampQuantity(stamp.id, -1)}
-                        disabled={quantity === 0}
-                        className="w-6 h-6 rounded-full border border-primary bg-white hover:bg-primary/10 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center text-xs font-bold text-primary transition-all"
-                      >
-                        −
-                      </button>
-                      <span className="text-sm font-bold min-w-[1.5rem] text-center">{quantity}</span>
-                      <button
-                        type="button"
-                        onClick={() => updateStampQuantity(stamp.id, 1)}
-                        className="w-6 h-6 rounded-full border border-primary bg-white hover:bg-primary/10 flex items-center justify-center text-xs font-bold text-primary transition-all"
-                      >
-                        +
-                      </button>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-            
-            {totalItems > 0 && (
-              <div className="pt-2 mt-2 border-t border-border">
-                <div className="flex items-center gap-1.5 mb-1.5 text-xs font-medium text-muted-foreground">
-                  <ShoppingCartIcon className="h-3 w-3" />
-                  カート内容
-                </div>
-                <div className="space-y-0.5 mb-1.5">
-                  {Object.entries(stampCart).map(([stampId, qty]) => {
-                    const stamp = STAMPS.find((s) => s.id === stampId)
-                    if (!stamp) return null
-                    return (
-                      <div key={stampId} className="flex justify-between text-[10px]">
-                        <span>
-                          {stamp.emoji} {stamp.label} × {qty}
-                        </span>
-                        <span className="font-medium">{(stamp.points * qty).toLocaleString()}pt</span>
-                      </div>
-                    )
-                  })}
-                </div>
+          <div className="bg-white/70 border-2 border-border rounded-lg p-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">⭐</span>
+                <div className="text-xs text-muted-foreground">500pt / 個</div>
               </div>
-            )}
-
-            {totalItems > 0 && (
-              <div className="pt-2 border-t border-primary/20">
-                <div className="flex justify-between items-center">
-                  <span className="text-xs font-bold">合計</span>
-                  <span className="text-base font-bold text-primary">{totalPoints.toLocaleString()}pt</span>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => handleStampQuantityChange(-1)}
+                  disabled={stampQuantity === 0}
+                  className="w-8 h-8 rounded-full border-2 border-primary bg-white hover:bg-primary/10 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center font-bold text-primary transition-all"
+                >
+                  −
+                </button>
+                <span className="text-lg font-bold min-w-[2rem] text-center">{stampQuantity}</span>
+                <button
+                  type="button"
+                  onClick={() => handleStampQuantityChange(1)}
+                  className="w-8 h-8 rounded-full border-2 border-primary bg-white hover:bg-primary/10 flex items-center justify-center font-bold text-primary transition-all"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+            {stampQuantity > 0 && (
+              <div className="pt-3 border-t border-border">
+                <div className="flex flex-wrap gap-1 justify-center mb-2">
+                  {Array.from({ length: stampQuantity }).map((_, index) => (
+                    <span
+                      key={index}
+                      className={`text-2xl inline-block ${animatingStars.includes(index) ? "animate-pop-in" : ""}`}
+                      style={{
+                        animationDelay: animatingStars.includes(index)
+                          ? `${(index - (stampQuantity - animatingStars.length)) * 100}ms`
+                          : "0ms",
+                      }}
+                    >
+                      ⭐
+                    </span>
+                  ))}
+                </div>
+                <div className="text-sm font-medium text-primary text-center">
+                  合計: {(stampQuantity * 500).toLocaleString()}pt
                 </div>
               </div>
             )}

@@ -7,18 +7,29 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import Link from "next/link"
 import { useRouter } from 'next/navigation'
-import { BanknoteIcon, SendIcon, ChevronLeft, PlusIcon, FrameIcon } from 'lucide-react'
+import { BanknoteIcon, SendIcon, ChevronLeft, PlusIcon } from 'lucide-react'
 import { RippleButton } from "@/components/ripple-button"
 import type { Recipient } from "@/types/recipient"
 import type { RecipientMessage } from "@/types/message"
 import { RecipientMessageForm } from "@/components/recipient-message-form"
-import { STAMPS } from "@/lib/constants"
-import Image from "next/image"
 
 interface SendPageProps {
   params: {
     id: string
   }
+}
+
+const FRAME_POINTS: Record<string, number> = {
+  none: 0,
+  flower: 500,
+  autumn: 500,
+}
+
+const STAMP_POINTS: Record<string, number> = {
+  "👏": 500,
+  "⭐": 1000,
+  "❤️": 2000,
+  "🎉": 5000,
 }
 
 export default function SendPage({ params }: SendPageProps) {
@@ -28,7 +39,6 @@ export default function SendPage({ params }: SendPageProps) {
   const [availablePerformers, setAvailablePerformers] = useState<Recipient[]>([])
   const [messages, setMessages] = useState<Record<string, RecipientMessage>>({})
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
-  const [hasFrame, setHasFrame] = useState<boolean>(false)
 
   useEffect(() => {
     const organizer: Recipient = {
@@ -41,19 +51,35 @@ export default function SendPage({ params }: SendPageProps) {
     const performers: Recipient[] = [
       {
         id: "performer-1",
-        name: "河西健吾",
+        name: "天野 しずく",
         role: "performer",
         occupation: "声優",
-        agency: "マウスプロモーション",
+        agency: "ドリームボイス",
         image: "/images/performer-1.jpeg",
       },
       {
         id: "performer-2",
-        name: "高塚智人",
+        name: "早乙女 みなと",
         role: "performer",
         occupation: "声優",
-        agency: "マウスプロモーション",
+        agency: "ステラボイス",
         image: "/images/performer-2.jpeg",
+      },
+      {
+        id: "performer-3",
+        name: "有栖川 りお",
+        role: "performer",
+        occupation: "声優",
+        agency: "ムーンライト",
+        image: "/images/performer-3.jpeg",
+      },
+      {
+        id: "performer-4",
+        name: "白石 ほのか",
+        role: "performer",
+        occupation: "声優",
+        agency: "サンシャイン",
+        image: "/images/performer-4.jpeg",
       },
     ]
 
@@ -61,10 +87,10 @@ export default function SendPage({ params }: SendPageProps) {
     setAvailablePerformers(performers)
   }, [eventId, router])
 
-  const handleMessageChange = useCallback((message: RecipientMessage) => {
+  const handleMessageChange = useCallback((recipientId: string, message: RecipientMessage) => {
     setMessages((prev) => ({
       ...prev,
-      [message.recipientId]: message,
+      [recipientId]: message,
     }))
   }, [])
 
@@ -87,17 +113,10 @@ export default function SendPage({ params }: SendPageProps) {
   }
 
   const totalAmount = Object.values(messages).reduce((total, message) => {
-    let stampPoints = 0
-    if (message.stampCart) {
-      for (const [stampId, quantity] of Object.entries(message.stampCart)) {
-        const stamp = STAMPS.find((s) => s.id === stampId)
-        if (stamp) {
-          stampPoints += stamp.points * quantity
-        }
-      }
-    }
-    return total + stampPoints
-  }, 0) + (hasFrame ? 500 : 0)
+    const framePoints = FRAME_POINTS[message.selectedFrame] || 0
+    const stampPoints = message.selectedStamps.reduce((sum, emoji) => sum + (STAMP_POINTS[emoji] || 0), 0)
+    return total + framePoints + stampPoints
+  }, 0)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -107,7 +126,6 @@ export default function SendPage({ params }: SendPageProps) {
       eventId,
       messages: Object.values(messages),
       totalAmount,
-      hasFrame,
     }
     sessionStorage.setItem("paymentInfo", JSON.stringify(paymentInfo))
 
@@ -137,7 +155,7 @@ export default function SendPage({ params }: SendPageProps) {
           <div key={recipient.id} className="relative">
             <RecipientMessageForm
               recipient={recipient}
-              onChange={handleMessageChange}
+              onChange={(message) => handleMessageChange(recipient.id, message)}
             />
             {recipient.role !== "organizer" && (
               <button
@@ -178,49 +196,6 @@ export default function SendPage({ params }: SendPageProps) {
             </CardContent>
           </Card>
         )}
-
-        <Card className="overflow-hidden border-none shadow-lg">
-          <CardContent className="p-4">
-            <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
-              <FrameIcon className="h-4 w-4 text-primary" />
-              フレームを購入して主催者を応援
-            </h3>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => setHasFrame(false)}
-                className={`h-14 rounded-lg border-2 font-medium text-sm transition-all ${
-                  !hasFrame
-                    ? 'border-primary bg-primary text-white'
-                    : 'border-border bg-white text-foreground hover:border-primary/50'
-                }`}
-              >
-                なし
-              </button>
-              <button
-                type="button"
-                onClick={() => setHasFrame(true)}
-                className={`relative transition-all ${
-                  hasFrame ? 'ring-4 ring-primary ring-offset-2' : 'opacity-70 hover:opacity-100'
-                }`}
-              >
-                <div className="relative w-full h-14">
-                  <Image
-                    src="/images/frame-button.png"
-                    alt="メッセージフレーム"
-                    fill
-                    className="object-contain"
-                  />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-sm font-bold text-amber-900 drop-shadow-sm">
-                      500pt
-                    </span>
-                  </div>
-                </div>
-              </button>
-            </div>
-          </CardContent>
-        </Card>
 
         <Card className="overflow-hidden border-none shadow-lg bg-gradient-to-br from-primary/10 to-primary/5">
           <CardContent className="p-4">
