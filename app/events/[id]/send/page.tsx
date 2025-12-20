@@ -6,12 +6,13 @@ import { useEffect, useState, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import Link from "next/link"
-import { useRouter } from 'next/navigation'
-import { BanknoteIcon, SendIcon, ChevronLeft, PlusIcon } from 'lucide-react'
+import { useRouter } from "next/navigation"
+import { SendIcon, ChevronLeft, Music } from "lucide-react"
 import { RippleButton } from "@/components/ripple-button"
 import type { Recipient } from "@/types/recipient"
 import type { RecipientMessage } from "@/types/message"
 import { RecipientMessageForm } from "@/components/recipient-message-form"
+import { STAMPS } from "@/lib/constants"
 
 interface SendPageProps {
   params: {
@@ -19,103 +20,57 @@ interface SendPageProps {
   }
 }
 
-const FRAME_POINTS: Record<string, number> = {
-  none: 0,
-  flower: 500,
-  autumn: 500,
-}
-
-const STAMP_POINTS: Record<string, number> = {
-  "👏": 500,
-  "⭐": 1000,
-  "❤️": 2000,
-  "🎉": 5000,
-}
-
 export default function SendPage({ params }: SendPageProps) {
   const router = useRouter()
   const eventId = Number.parseInt(params.id)
   const [selectedRecipients, setSelectedRecipients] = useState<Recipient[]>([])
-  const [availablePerformers, setAvailablePerformers] = useState<Recipient[]>([])
+  const [organizer, setOrganizer] = useState<Recipient | null>(null)
   const [messages, setMessages] = useState<Record<string, RecipientMessage>>({})
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
 
   useEffect(() => {
-    const organizer: Recipient = {
+    const organizerData: Recipient = {
       id: "organizer-1",
-      name: "イベント主催者",
+      name: "ジャパン・アーツ",
       role: "organizer",
-      image: "/images/organizer.jpg",
+      occupation: "イベント主催者",
+      agency: "",
+      image: "/images/image.png",
     }
+    setOrganizer(organizerData)
 
     const performers: Recipient[] = [
       {
         id: "performer-1",
-        name: "天野 しずく",
+        name: "ヴィンセント・オン",
         role: "performer",
-        occupation: "声優",
-        agency: "ドリームボイス",
-        image: "/images/performer-1.jpeg",
-      },
-      {
-        id: "performer-2",
-        name: "早乙女 みなと",
-        role: "performer",
-        occupation: "声優",
-        agency: "ステラボイス",
-        image: "/images/performer-2.jpeg",
-      },
-      {
-        id: "performer-3",
-        name: "有栖川 りお",
-        role: "performer",
-        occupation: "声優",
-        agency: "ムーンライト",
-        image: "/images/performer-3.jpeg",
-      },
-      {
-        id: "performer-4",
-        name: "白石 ほのか",
-        role: "performer",
-        occupation: "声優",
-        agency: "サンシャイン",
-        image: "/images/performer-4.jpeg",
+        occupation: "ピアニスト",
+        agency: "",
+        image: "/images/vincent-ong.png",
       },
     ]
 
-    setSelectedRecipients([organizer])
-    setAvailablePerformers(performers)
+    setSelectedRecipients(performers)
   }, [eventId, router])
 
-  const handleMessageChange = useCallback((recipientId: string, message: RecipientMessage) => {
+  const handleMessageChange = useCallback((message: RecipientMessage) => {
     setMessages((prev) => ({
       ...prev,
-      [recipientId]: message,
+      [message.recipientId]: message,
     }))
   }, [])
 
-  const handleAddPerformer = (performer: Recipient) => {
-    setSelectedRecipients((prev) => [...prev, performer])
-    setAvailablePerformers((prev) => prev.filter((p) => p.id !== performer.id))
-  }
-
-  const handleRemoveRecipient = (recipientId: string) => {
-    const recipient = selectedRecipients.find((r) => r.id === recipientId)
-    if (recipient && recipient.role === "performer") {
-      setAvailablePerformers((prev) => [...prev, recipient])
-    }
-    setSelectedRecipients((prev) => prev.filter((r) => r.id !== recipientId))
-    setMessages((prev) => {
-      const newMessages = { ...prev }
-      delete newMessages[recipientId]
-      return newMessages
-    })
-  }
-
   const totalAmount = Object.values(messages).reduce((total, message) => {
-    const framePoints = FRAME_POINTS[message.selectedFrame] || 0
-    const stampPoints = message.selectedStamps.reduce((sum, emoji) => sum + (STAMP_POINTS[emoji] || 0), 0)
-    return total + framePoints + stampPoints
+    let stampPoints = 0
+    if (message.stampCart) {
+      for (const [stampId, quantity] of Object.entries(message.stampCart)) {
+        const stamp = STAMPS.find((s) => s.id === stampId)
+        if (stamp) {
+          stampPoints += stamp.points * quantity
+        }
+      }
+    }
+    return total + stampPoints
   }, 0)
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -140,85 +95,113 @@ export default function SendPage({ params }: SendPageProps) {
   }
 
   return (
-    <div className="space-y-5">
-      <div className="flex items-center mb-2">
-        <Link href="/events">
-          <Button variant="ghost" size="icon" className="rounded-full h-8 w-8">
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-        </Link>
-        <h1 className="text-lg font-bold ml-1">メッセージを作成</h1>
+    <div className="min-h-screen elegant-gradient pb-20 relative overflow-hidden">
+      <div className="absolute inset-0 pointer-events-none opacity-10">
+        <div className="absolute top-10 right-10 text-primary text-6xl sakura-float">🌸</div>
+        <div className="absolute top-32 left-16 text-primary text-4xl sakura-float" style={{ animationDelay: "2s" }}>
+          🌸
+        </div>
+        <div
+          className="absolute bottom-24 right-24 text-primary text-5xl sakura-float"
+          style={{ animationDelay: "4s" }}
+        >
+          🌸
+        </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {selectedRecipients.map((recipient) => (
-          <div key={recipient.id} className="relative">
-            <RecipientMessageForm
-              recipient={recipient}
-              onChange={(message) => handleMessageChange(recipient.id, message)}
-            />
-            {recipient.role !== "organizer" && (
-              <button
-                type="button"
-                onClick={() => handleRemoveRecipient(recipient.id)}
-                className="absolute top-2 right-2 z-10 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center text-xs hover:bg-red-600 transition-colors"
-              >
-                ×
-              </button>
-            )}
+      <div className="bg-card/50 backdrop-blur-md border-b border-primary/30 sticky top-0 z-20">
+        <div className="max-w-2xl mx-auto px-4 py-5 flex items-center gap-4">
+          <Link href="/events">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-full h-10 w-10 hover:bg-primary/20 border border-primary/30"
+            >
+              <ChevronLeft className="h-5 w-5 text-primary" />
+            </Button>
+          </Link>
+          <div className="flex-1 text-center">
+            <h1 className="text-2xl font-serif font-bold text-primary tracking-wider">
+              クラシック音楽への
+              <br />
+              ご支援のお願い
+            </h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              本日のご感想と、アーティストへのご支援をお届けください。
+            </p>
           </div>
-        ))}
+          <Music className="h-7 w-7 text-primary/60" />
+        </div>
+      </div>
 
-        {availablePerformers.length > 0 && (
-          <Card className="overflow-hidden border-none shadow-lg">
-            <CardContent className="p-4">
-              <h3 className="text-sm font-medium mb-3">出演者を追加</h3>
-              <div className="space-y-2">
-                {availablePerformers.map((performer) => (
-                  <button
-                    key={performer.id}
-                    type="button"
-                    onClick={() => handleAddPerformer(performer)}
-                    className="w-full flex items-center gap-3 p-3 rounded-lg border-2 border-border bg-white hover:border-primary hover:bg-primary/5 transition-all"
-                  >
-                    <PlusIcon className="h-4 w-4 text-primary flex-shrink-0" />
-                    <div className="flex-1 text-left">
-                      <div className="font-medium text-sm">{performer.name}</div>
-                      {performer.occupation && (
-                        <div className="text-xs text-muted-foreground">
-                          {performer.occupation}（{performer.agency}）
-                        </div>
-                      )}
-                    </div>
-                  </button>
-                ))}
+      <div className="max-w-2xl mx-auto px-4 pt-8 relative z-10">
+        <div className="text-center mb-8 space-y-3">
+          <p className="text-base text-foreground/90 leading-relaxed">本日の演奏はいかがでしたでしょうか。</p>
+          <p className="text-base text-foreground/90 leading-relaxed">皆様の温かいご支援が、未来の芸術を育みます。</p>
+          <p className="text-base text-foreground/90 leading-relaxed">
+            心ばかりの贈り物として、アーティストへの感謝をお届けいただければ幸いです。
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-8">
+          {organizer && (
+            <div className="relative">
+              <div className="mb-4 text-center">
+                <h2 className="text-xl font-serif font-bold text-primary tracking-wider">主催へのご支援</h2>
+                <p className="text-sm text-muted-foreground mt-1">イベント運営へのご支援をお願いいたします</p>
+              </div>
+              <RecipientMessageForm recipient={organizer} onChange={handleMessageChange} />
+            </div>
+          )}
+
+          <div className="border-t border-primary/30 pt-8">
+            <div className="mb-4 text-center">
+              <h2 className="text-xl font-serif font-bold text-primary tracking-wider">アーティストへのご支援</h2>
+              <p className="text-sm text-muted-foreground mt-1">演奏者への感謝の気持ちをお届けください</p>
+            </div>
+          </div>
+
+          {selectedRecipients.map((recipient) => (
+            <div key={recipient.id} className="relative">
+              <RecipientMessageForm recipient={recipient} onChange={handleMessageChange} />
+            </div>
+          ))}
+
+          <Card className="overflow-hidden border-2 border-primary/40 shadow-2xl bg-gradient-to-br from-card via-secondary to-card backdrop-blur-md">
+            <CardContent className="p-8">
+              <div className="space-y-5">
+                <div className="text-center border-b border-primary/30 pb-4">
+                  <div className="text-sm font-medium text-muted-foreground mb-2">ご支援合計額</div>
+                  <div className="flex items-baseline justify-center gap-2">
+                    <span className="text-5xl font-bold text-primary tracking-tight">
+                      ¥{totalAmount.toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+                <div className="text-center">
+                  <p className="text-sm text-foreground/80 leading-relaxed">
+                    アーティストへ心を込めたメッセージをお届けいたします
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>
-        )}
 
-        <Card className="overflow-hidden border-none shadow-lg bg-gradient-to-br from-primary/10 to-primary/5">
-          <CardContent className="p-4">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">合計ポイント</span>
-                <div className="flex items-center gap-1">
-                  <BanknoteIcon className="h-5 w-5 text-primary" />
-                  <span className="text-2xl font-bold text-primary">{totalAmount.toLocaleString()}pt</span>
-                </div>
-              </div>
-              <p className="text-xs text-muted-foreground text-center">
-                {selectedRecipients.length}人にメッセージを送信
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <RippleButton type="submit" className="w-full gap-2 rounded-full h-11" disabled={isSubmitting}>
-          <SendIcon className="h-4 w-4" />
-          {isSubmitting ? "処理中..." : "確認画面へ"}
-        </RippleButton>
-      </form>
+          <div className="pt-4">
+            <RippleButton
+              type="submit"
+              className="w-full gap-3 rounded-xl h-16 text-lg font-medium shadow-2xl hover:shadow-primary/50 transition-all bg-primary hover:bg-primary/90 text-primary-foreground border-2 border-primary/50"
+              disabled={isSubmitting}
+            >
+              <SendIcon className="h-6 w-6" />
+              {isSubmitting ? "処理中..." : "送信"}
+            </RippleButton>
+            <p className="text-sm text-center text-muted-foreground mt-4 leading-relaxed">
+              次のページでご支援内容をご確認いただけます
+            </p>
+          </div>
+        </form>
+      </div>
     </div>
   )
 }

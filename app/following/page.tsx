@@ -5,56 +5,24 @@ import { PerformerCard } from "@/components/performer-card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export default function FollowingPage() {
-  // フォロー中の出演者データ
   const performers = [
     {
       id: 1,
-      name: "天野 しずく",
-      occupation: "声優",
-      agency: "ドリームボイス",
-      image: "/images/performer-1.jpeg",
-    },
-    {
-      id: 2,
-      name: "早乙女 みなと",
-      occupation: "声優",
-      agency: "ステラボイス",
-      image: "/images/performer-2.jpeg",
-    },
-    {
-      id: 3,
-      name: "有栖川 りお",
-      occupation: "声優",
-      agency: "ムーンライト",
-      image: "/images/performer-3.jpeg",
+      name: "ヴィンセント・オン",
+      occupation: "ピアニスト",
+      agency: "ジャパン・アーツ",
+      image: "/images/vincent-ong.png",
     },
   ]
 
-  // フォロー中の出演者のイベントデータ
   const events = [
     {
       id: 1,
-      title: "サマーフェス2025",
-      date: "2025-07-20",
-      location: "さいたまスーパーアリーナ",
-      image: "/images/concert.png",
-      performers: ["天野 しずく", "早乙女 みなと"],
-    },
-    {
-      id: 2,
-      title: "5周年ライブin横アリ",
-      date: "2025-07-26",
-      location: "横浜アリーナ",
-      image: "/images/concert-lights.jpeg",
-      performers: ["有栖川 りお"],
-    },
-    {
-      id: 3,
-      title: "生誕祭2025",
-      date: "2025-07-27",
-      location: "サイエンスホール",
-      image: "/images/concert-audience.jpeg",
-      performers: ["天野 しずく"],
+      title: "ヴィンセント・オン ピアノ・リサイタル",
+      date: "2026-02-05",
+      location: "浜離宮朝日ホール",
+      image: "/images/concert-hall.png",
+      performers: ["ヴィンセント・オン"],
     },
   ]
 

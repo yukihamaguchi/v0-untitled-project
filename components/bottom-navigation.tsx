@@ -1,6 +1,6 @@
 "use client"
 
-import { Home, Calendar, Heart, User } from "lucide-react"
+import { Home, Building2, Heart, User } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
@@ -15,9 +15,9 @@ export function BottomNavigation() {
       icon: Home,
     },
     {
-      name: "イベント",
-      href: "/events",
-      icon: Calendar,
+      name: "事務所",
+      href: "/agencies",
+      icon: Building2,
     },
     {
       name: "フォロー中",

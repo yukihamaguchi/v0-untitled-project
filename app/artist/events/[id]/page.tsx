@@ -146,11 +146,12 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
 
   const artist = {
     id: 1,
-    name: "天野 しずく",
-    occupation: "声優",
-    agency: "ドリームボイス",
-    image: "/images/performer-1.jpeg",
+    name: "ヴィンセント・オン",
+    occupation: "ピアニスト",
+    agency: "ジャパン・アーツ",
+    image: "/images/vincent-ong.png",
   }
+  // </CHANGE>
 
   const events = {
     "1": {

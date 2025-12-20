@@ -1,40 +1,34 @@
 "use client"
 
-import { EventCard } from "@/components/event-card"
+import { AgencyCard } from "@/components/agency-card"
+
+interface Agency {
+  id: string
+  name: string
+  description: string | null
+  logo_url: string | null
+  website_url: string | null
+}
+
+const agencies: Agency[] = [
+  {
+    id: "japan-arts",
+    name: "ジャパン・アーツ",
+    description:
+      "1976年の創立以来「真の芸術にふれた感動は、人々に生きる力を与えてくれる」という理念のもと、日本と世界のアーティストたちによる最高の芸術を紹介",
+    logo_url: "/images/image.png",
+    website_url: "https://www.japanarts.co.jp",
+  },
+]
 
 export default function Home() {
-  // 仮のイベントデータ
-  const events = [
-    {
-      id: 1,
-      title: "サマーフェス2025",
-      date: "2025-07-20",
-      location: "さいたまスーパーアリーナ",
-      image: "/images/concert.png",
-    },
-    {
-      id: 2,
-      title: "5周年ライブin横アリ",
-      date: "2025-07-26",
-      location: "横浜アリーナ",
-      image: "/images/concert-lights.jpeg",
-    },
-    {
-      id: 3,
-      title: "生誕祭2025",
-      date: "2025-07-27",
-      location: "サイエンスホール",
-      image: "/images/concert-audience.jpeg",
-    },
-  ]
-
   return (
     <div className="space-y-5">
-      <h1 className="text-xl font-bold">イベント一覧</h1>
+      <h1 className="text-xl font-bold">事務所一覧</h1>
 
       <div className="space-y-6">
-        {events.map((event, index) => (
-          <EventCard key={event.id} event={event} index={index} />
+        {agencies.map((agency, index) => (
+          <AgencyCard key={agency.id} agency={agency} index={index} />
         ))}
       </div>
     </div>

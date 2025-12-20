@@ -43,14 +43,13 @@ export default function PerformerPage({ params }: PerformerPageProps) {
     title: "サマーフェス2025",
   }
 
-  // 演者データ
   const performers: Record<string, Performer> = {
     "1": {
       id: 1,
-      name: "天野 しずく",
-      occupation: "声優",
-      agency: "ドリームボイス",
-      image: "/images/performer-1.jpeg",
+      name: "ヴィンセント・オン",
+      occupation: "ピアニスト",
+      agency: "ジャパン・アーツ",
+      image: "/images/vincent-ong.png",
       isFollowing: false,
       paypayId: "p2p01_VB6KgXvj6N25mbxs",
     },
@@ -82,6 +81,7 @@ export default function PerformerPage({ params }: PerformerPageProps) {
       paypayId: "p2p01_VB6KgXvj6N25mbxs",
     },
   }
+  // </CHANGE>
 
   const performer = performers[params.performerId] || performers["1"]
 

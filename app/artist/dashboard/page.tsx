@@ -22,57 +22,27 @@ export default function ArtistDashboardPage() {
   const [totalMessages, setTotalMessages] = useState(0)
   const [events, setEvents] = useState<any[]>([])
 
-  // 仮のアーティストデータ
   const artist = {
     id: 1,
-    name: "天野 しずく",
-    occupation: "声優",
-    agency: "ドリームボイス",
-    image: "/images/performer-1.jpeg",
+    name: "ヴィンセント・オン",
+    occupation: "ピアニスト",
+    agency: "ジャパン・アーツ",
+    image: "/images/vincent-ong.png",
   }
 
-  // 仮のイベントデータ
   const upcomingEventsData = [
     {
       id: 1,
-      title: "サマーフェス2025",
-      date: "2025-07-20",
-      location: "さいたまスーパーアリーナ",
-      image: "/images/concert.png",
-      totalGifting: 0,
-      messageCount: 0,
-    },
-    {
-      id: 2,
-      title: "5周年ライブin横アリ",
-      date: "2025-07-26",
-      location: "横浜アリーナ",
-      image: "/images/concert-lights.jpeg",
+      title: "ヴィンセント・オン ピアノ・リサイタル",
+      date: "2026-02-05",
+      location: "浜離宮朝日ホール",
+      image: "/images/concert-hall.png",
       totalGifting: 0,
       messageCount: 0,
     },
   ]
 
-  const pastEventsData = [
-    {
-      id: 3,
-      title: "生誕祭2025",
-      date: "2025-04-15",
-      location: "サイエンスホール",
-      image: "/images/concert-audience.jpeg",
-      totalGifting: 0,
-      messageCount: 0,
-    },
-    {
-      id: 4,
-      title: "ウィンターライブ2024",
-      date: "2024-12-24",
-      location: "東京ドームシティホール",
-      image: "/images/concert.png",
-      totalGifting: 0,
-      messageCount: 0,
-    },
-  ]
+  const pastEventsData: any[] = []
 
   useEffect(() => {
     // セッション情報を取得
@@ -202,7 +172,7 @@ export default function ArtistDashboardPage() {
               <TabsTrigger value="upcoming">今後のイベント</TabsTrigger>
               <TabsTrigger value="past">過去のイベント</TabsTrigger>
             </TabsList>
-            <Button variant="outline" size="sm" className="text-xs">
+            <Button variant="outline" size="sm" className="text-xs bg-transparent">
               <CalendarIcon className="h-3 w-3 mr-1" />
               カレンダー表示
             </Button>

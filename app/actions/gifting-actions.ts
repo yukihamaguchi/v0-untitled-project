@@ -17,7 +17,6 @@ export async function saveGifting(data: GiftingData) {
       event_name: data.event_name,
       amount: data.amount,
       comment: data.comment || null,
-      page_size: data.page_size || "full",
       frame_type: data.frame_type || "none",
       frame_points: data.frame_points || 0,
       stamps: data.stamps && data.stamps.length > 0 ? data.stamps : null,

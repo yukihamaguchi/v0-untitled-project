@@ -14,65 +14,27 @@ interface EventPageProps {
 export default function EventPage({ params }: EventPageProps) {
   const eventId = Number.parseInt(params.id)
 
-  // イベントデータ
   const events = {
     "1": {
       id: 1,
-      title: "サマーフェス2025",
-      date: "2025-07-20",
-      location: "さいたまスーパーアリーナ",
-      description: "2025年夏最大の音楽フェスティバル。様々なジャンルのアーティストが集結します。",
-      image: "/images/concert.png",
-    },
-    "2": {
-      id: 2,
-      title: "5周年ライブin横アリ",
-      date: "2025-07-26",
-      location: "横浜アリーナ",
-      description: "デビュー5周年を記念した特別ライブイベント。豪華ゲストも多数出演予定。",
-      image: "/images/concert-lights.jpeg",
-    },
-    "3": {
-      id: 3,
-      title: "生誕祭2025",
-      date: "2025-07-27",
-      location: "サイエンスホール",
-      description: "アーティスト生誕を祝う特別なイベント。ファン感謝祭としても位置づけられています。",
-      image: "/images/concert-audience.jpeg",
+      title: "ヴィンセント・オン ピアノ・リサイタル",
+      date: "2026-02-05",
+      location: "浜離宮朝日ホール",
+      description:
+        "ジャパン・アーツ主催のヴィンセント・オン ピアノ・リサイタル。クラシック音楽の名曲をお楽しみください。",
+      image: "/images/concert-hall.png",
     },
   }
 
   const event = events[params.id as keyof typeof events] || events["1"]
 
-  // 出演者データ
   const performers = [
     {
       id: 1,
-      name: "天野 しずく",
-      occupation: "声優",
-      agency: "ドリームボイス",
-      image: "/images/performer-1.jpeg",
-    },
-    {
-      id: 2,
-      name: "早乙女 みなと",
-      occupation: "声優",
-      agency: "ステラボイス",
-      image: "/images/performer-2.jpeg",
-    },
-    {
-      id: 3,
-      name: "有栖川 りお",
-      occupation: "声優",
-      agency: "ムーンライト",
-      image: "/images/performer-3.jpeg",
-    },
-    {
-      id: 4,
-      name: "白石 ほのか",
-      occupation: "声優",
-      agency: "サンシャイン",
-      image: "/images/performer-4.jpeg",
+      name: "ヴィンセント・オン",
+      occupation: "ピアニスト",
+      agency: "ジャパン・アーツ",
+      image: "/images/vincent-ong.png",
     },
   ]
 
@@ -104,7 +66,14 @@ export default function EventPage({ params }: EventPageProps) {
           <div className="flex flex-col gap-2 mb-3">
             <div className="flex items-center gap-1">
               <CalendarIcon className="h-3 w-3 text-primary" />
-              <span className="text-xs">{new Date(event.date).toLocaleDateString("ja-JP")}</span>
+              <span className="text-xs">
+                {new Date(event.date).toLocaleDateString("ja-JP", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                  weekday: "short",
+                })}
+              </span>
             </div>
             <div className="flex items-center gap-1">
               <MapPinIcon className="h-3 w-3 text-primary" />

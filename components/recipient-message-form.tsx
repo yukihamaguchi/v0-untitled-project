@@ -2,18 +2,18 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { SparklesIcon, UserIcon } from "lucide-react"
+import { UserIcon, Gift } from "lucide-react"
 import Image from "next/image"
 import type { Recipient } from "@/types/recipient"
 import type { RecipientMessage } from "@/types/message"
-import { PAGE_SIZES, FRAMES } from "@/lib/constants"
+import { STAMPS, MAX_MESSAGE_LENGTH } from "@/lib/constants"
 import { calculateTotalPoints } from "@/lib/utils/points"
-import { getWritableArea } from "@/lib/utils/message-layout"
+import type { StampId } from "@/lib/constants"
 
 interface RecipientMessageFormProps {
   recipient: Recipient
@@ -28,248 +28,163 @@ export function RecipientMessageForm({
   defaultSenderName = "",
   defaultSenderAvatar = "/images/default-avatar.jpg",
 }: RecipientMessageFormProps) {
-  const [pageSize, setPageSize] = useState<string>("sixteenth")
-  const [selectedFrame, setSelectedFrame] = useState<string>("none")
   const [comment, setComment] = useState<string>("")
-  const [selectedStamps, setSelectedStamps] = useState<string[]>([])
-  const [stampQuantity, setStampQuantity] = useState<number>(0)
+  const [stampCart, setStampCart] = useState<Record<StampId, number>>({})
   const [senderName, setSenderName] = useState<string>(defaultSenderName)
   const [senderAvatar] = useState<string>(defaultSenderAvatar)
-  const [animatingStars, setAnimatingStars] = useState<number[]>([])
 
-  const currentPageSize = PAGE_SIZES.find((s) => s.value === pageSize) || PAGE_SIZES[0]
-  const selectedFrameData = FRAMES.find((f) => f.value === selectedFrame) || FRAMES[0]
+  const totalPoints = calculateTotalPoints(stampCart, "none")
 
-  const totalPoints = calculateTotalPoints(selectedStamps, selectedFrame as any)
-
-  // Notify parent of changes
   useEffect(() => {
-    onChange({
+    const message: RecipientMessage = {
       recipientId: recipient.id,
       recipientName: recipient.name,
       recipientRole: recipient.role,
       recipientImage: recipient.image || "",
-      pageSize,
-      selectedFrame,
+      selectedFrame: "none",
       comment,
-      selectedStamps,
+      selectedStamps: [],
+      stampCart,
       senderName,
       senderAvatar,
-    })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    recipient.id,
-    recipient.name,
-    recipient.role,
-    recipient.image,
-    pageSize,
-    selectedFrame,
-    comment,
-    selectedStamps,
-    senderName,
-    senderAvatar,
-    // Note: onChange is intentionally excluded from dependencies to prevent infinite loop
-  ])
-
-  const handleStampQuantityChange = (change: number) => {
-    const newQuantity = Math.max(0, stampQuantity + change)
-    setStampQuantity(newQuantity)
-    // Create array with star emoji repeated by quantity
-    setSelectedStamps(Array(newQuantity).fill("⭐"))
-
-    if (change > 0) {
-      const newStarIndices = Array.from({ length: change }, (_, i) => stampQuantity + i)
-      setAnimatingStars(newStarIndices)
-      setTimeout(() => setAnimatingStars([]), 600)
     }
-  }
+    onChange(message)
+  }, [recipient.id, recipient.name, recipient.role, recipient.image, comment, stampCart, senderName, senderAvatar])
 
-  const handleCommentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  const selectGiftOption = useCallback((stampId: StampId) => {
+    setStampCart({ [stampId]: 1 })
+  }, [])
+
+  const handleCommentChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setComment(e.target.value)
-  }
+  }, [])
 
-  const writableArea = getWritableArea(pageSize as any)
-
-  const PageSizeIcon = ({ size }: { size: string }) => {
-    if (size === "full") {
-      // 1ページ: 大きな正方形
-      return <div className="w-10 h-10 mx-auto mb-1.5 border-2 border-current rounded"></div>
-    } else if (size === "quarter") {
-      // 1/4ページ: 2×2グリッド、左上を強調
-      return (
-        <div className="w-10 h-10 mx-auto mb-1.5 grid grid-cols-2 grid-rows-2 gap-0.5 border-2 border-current rounded p-0.5">
-          <div className="bg-current"></div>
-          <div className="border border-current/30"></div>
-          <div className="border border-current/30"></div>
-          <div className="border border-current/30"></div>
-        </div>
-      )
-    } else {
-      // 1/16ページ: 4×4グリッド、左上を強調
-      return (
-        <div className="w-10 h-10 mx-auto mb-1.5 grid grid-cols-4 grid-rows-4 gap-0.5 border-2 border-current rounded p-0.5">
-          <div className="bg-current"></div>
-          <div className="border border-current/20"></div>
-          <div className="border border-current/20"></div>
-          <div className="border border-current/20"></div>
-          <div className="border border-current/20"></div>
-          <div className="border border-current/20"></div>
-          <div className="border border-current/20"></div>
-          <div className="border border-current/20"></div>
-          <div className="border border-current/20"></div>
-          <div className="border border-current/20"></div>
-          <div className="border border-current/20"></div>
-          <div className="border border-current/20"></div>
-          <div className="border border-current/20"></div>
-          <div className="border border-current/20"></div>
-          <div className="border border-current/20"></div>
-          <div className="border border-current/20"></div>
-        </div>
-      )
-    }
-  }
+  const selectedStampId = Object.keys(stampCart)[0] as StampId | undefined
 
   return (
-    <Card className="overflow-hidden border-none shadow-lg bg-gradient-to-br from-background to-primary/5">
-      <CardHeader className="bg-primary/5 border-b border-primary/10 py-3 px-4">
-        <CardTitle className="flex items-center gap-2 text-base">
-          {recipient.role === "organizer" ? (
-            <div className="rounded-full h-8 w-8 bg-blue-500 border-2 border-primary/20 flex items-center justify-center">
-              <UserIcon className="h-4 w-4 text-white" />
-            </div>
-          ) : (
-            <Image
-              src={recipient.image || "/placeholder.svg"}
-              alt={recipient.name}
-              width={32}
-              height={32}
-              className="rounded-full object-cover h-8 w-8 border-2 border-primary/20"
-            />
-          )}
+    <Card className="overflow-hidden border-2 border-primary/40 shadow-xl bg-card/80 backdrop-blur-md">
+      <CardHeader className="bg-gradient-to-r from-primary/20 to-accent/20 border-b border-primary/40 py-5 px-6">
+        <CardTitle className="flex items-center gap-4 text-lg">
+          <Image
+            src={recipient.image || "/placeholder.svg"}
+            alt={recipient.name}
+            width={56}
+            height={56}
+            className="rounded-full object-cover h-14 w-14 border-3 border-primary/50 shadow-lg"
+          />
           <div className="flex-1">
-            <div className="font-bold">{recipient.name}</div>
-            {recipient.role === "performer" && recipient.occupation && (
-              <div className="text-xs text-muted-foreground font-normal">
-                {recipient.occupation}（{recipient.agency}）
-              </div>
+            <div className="font-semibold text-xl text-foreground">{recipient.name}</div>
+            {recipient.occupation && (
+              <div className="text-sm text-muted-foreground font-normal mt-1">{recipient.occupation}</div>
             )}
-            {recipient.role === "organizer" && <div className="text-xs text-muted-foreground font-normal">主催者</div>}
           </div>
-          <div className="text-sm font-bold text-primary">{totalPoints.toLocaleString()}pt</div>
+          <div className="text-right">
+            <div className="text-2xl font-bold text-primary">¥{totalPoints.toLocaleString()}</div>
+          </div>
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4 p-4">
+      <CardContent className="space-y-6 p-6">
         <div>
-          <Label htmlFor={`senderName-${recipient.id}`} className="text-xs font-medium flex items-center gap-1">
-            <UserIcon className="h-3 w-3 text-primary" />
-            送り主の名前
+          <Label htmlFor={`senderName-${recipient.id}`} className="text-sm font-medium flex items-center gap-2 mb-3">
+            <UserIcon className="h-4 w-4 text-primary" />
+            お名前
           </Label>
           <Input
             id={`senderName-${recipient.id}`}
             value={senderName}
             onChange={(e) => setSenderName(e.target.value)}
-            placeholder="例: TOSHIYA"
-            className="mt-1 bg-white text-sm h-9"
+            placeholder="例: 山田 太郎"
+            className="bg-background/50 border-primary/30 text-base h-12 rounded-lg focus-visible:ring-primary focus-visible:border-primary"
             maxLength={20}
           />
         </div>
 
         <div>
-          <Label className="text-xs font-medium mb-2 block">ページサイズ</Label>
-          <div className="grid grid-cols-3 gap-2">
-            {PAGE_SIZES.map((size) => (
-              <button
-                key={size.value}
-                type="button"
-                onClick={() => setPageSize(size.value)}
-                className={`p-3 rounded-lg border-2 transition-all ${
-                  pageSize === size.value
-                    ? "border-primary bg-primary/10 shadow-md text-primary"
-                    : "border-border bg-white/70 hover:border-primary/50 text-muted-foreground"
-                }`}
-              >
-                <PageSizeIcon size={size.value} />
-                <div className="text-xs font-medium mb-0.5">{size.label}</div>
-                <div className="text-[10px]">{size.description}</div>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div>
           <Label
             htmlFor={`comment-${recipient.id}`}
-            className="text-xs font-medium mb-2 block flex items-center justify-between"
+            className="text-sm font-medium mb-3 block flex items-center justify-between"
           >
-            <span>メッセージを記入</span>
-            <span className="text-muted-foreground">
-              {comment.length}/{currentPageSize.maxLength}文字
+            <span className="flex items-center gap-2">
+              <Gift className="h-4 w-4 text-primary" />
+              応援メッセージ
+            </span>
+            <span className="text-muted-foreground text-xs">
+              {comment.length}/{MAX_MESSAGE_LENGTH}文字
             </span>
           </Label>
           <Textarea
             id={`comment-${recipient.id}`}
-            placeholder="応援メッセージを入力してください"
+            placeholder="応援メッセージをお願いします"
             value={comment}
             onChange={handleCommentChange}
-            maxLength={currentPageSize.maxLength}
-            className="w-full min-h-[120px] resize-none bg-white border-2 border-border focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 text-base leading-relaxed p-3 rounded-lg"
-            rows={6}
+            maxLength={MAX_MESSAGE_LENGTH}
+            className="w-full min-h-[160px] resize-none bg-background/50 border-primary/30 focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-primary text-base leading-relaxed p-4 rounded-lg"
+            rows={7}
           />
         </div>
 
         <div>
-          <Label className="text-xs font-medium mb-1.5 block flex items-center gap-1">
-            <SparklesIcon className="h-3 w-3 text-primary" />
-            スタンプ購入で貢献
-          </Label>
-          <div className="bg-white/70 border-2 border-border rounded-lg p-4">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <span className="text-2xl">⭐</span>
-                <div className="text-xs text-muted-foreground">500pt / 個</div>
-              </div>
-              <div className="flex items-center gap-3">
+          <Label className="text-sm font-medium mb-4 block text-center text-lg">ご支援の選択</Label>
+          <div className="grid grid-cols-4 gap-3 max-w-3xl mx-auto">
+            {STAMPS.map((stamp) => {
+              const isSelected = selectedStampId === stamp.id
+
+              if (stamp.id === "none") {
+                return (
+                  <button
+                    key={stamp.id}
+                    type="button"
+                    onClick={() => selectGiftOption(stamp.id)}
+                    className={`relative flex flex-col items-center justify-center p-4 rounded-2xl border-3 transition-all duration-300 ${
+                      isSelected
+                        ? "border-muted-foreground bg-muted shadow-xl scale-105"
+                        : "border-muted/30 bg-card/50 hover:border-muted hover:bg-muted/10 shadow-md"
+                    }`}
+                  >
+                    <div className="relative w-16 h-16 mb-2 flex items-center justify-center">
+                      <span className="text-4xl text-muted-foreground font-light">－</span>
+                    </div>
+                    <div className="text-sm font-medium text-muted-foreground text-center leading-tight">
+                      {stamp.label}
+                    </div>
+                    {isSelected && (
+                      <div className="absolute -top-2 -right-2 w-7 h-7 bg-muted-foreground rounded-full flex items-center justify-center shadow-lg">
+                        <span className="text-background text-sm font-bold">✓</span>
+                      </div>
+                    )}
+                  </button>
+                )
+              }
+
+              return (
                 <button
+                  key={stamp.id}
                   type="button"
-                  onClick={() => handleStampQuantityChange(-1)}
-                  disabled={stampQuantity === 0}
-                  className="w-8 h-8 rounded-full border-2 border-primary bg-white hover:bg-primary/10 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center font-bold text-primary transition-all"
+                  onClick={() => selectGiftOption(stamp.id)}
+                  className={`relative flex flex-col items-center justify-center p-4 rounded-2xl border-3 transition-all duration-300 ${
+                    isSelected
+                      ? "border-primary bg-primary/20 shadow-xl scale-105"
+                      : "border-primary/30 bg-card/50 hover:border-primary/50 hover:bg-primary/10 shadow-md"
+                  }`}
                 >
-                  −
+                  <div className="relative w-16 h-16 mb-2">
+                    <Image src={stamp.image || "/placeholder.svg"} alt={stamp.label} fill className="object-contain" />
+                  </div>
+                  <div className="text-lg font-bold text-primary mb-0.5">{stamp.label}</div>
+                  <div className="text-xs font-medium text-foreground">¥{stamp.points.toLocaleString()}</div>
+                  {isSelected && (
+                    <div className="absolute -top-2 -right-2 w-7 h-7 bg-primary rounded-full flex items-center justify-center shadow-lg">
+                      <span className="text-primary-foreground text-sm font-bold">✓</span>
+                    </div>
+                  )}
                 </button>
-                <span className="text-lg font-bold min-w-[2rem] text-center">{stampQuantity}</span>
-                <button
-                  type="button"
-                  onClick={() => handleStampQuantityChange(1)}
-                  className="w-8 h-8 rounded-full border-2 border-primary bg-white hover:bg-primary/10 flex items-center justify-center font-bold text-primary transition-all"
-                >
-                  +
-                </button>
-              </div>
-            </div>
-            {stampQuantity > 0 && (
-              <div className="pt-3 border-t border-border">
-                <div className="flex flex-wrap gap-1 justify-center mb-2">
-                  {Array.from({ length: stampQuantity }).map((_, index) => (
-                    <span
-                      key={index}
-                      className={`text-2xl inline-block ${animatingStars.includes(index) ? "animate-pop-in" : ""}`}
-                      style={{
-                        animationDelay: animatingStars.includes(index)
-                          ? `${(index - (stampQuantity - animatingStars.length)) * 100}ms`
-                          : "0ms",
-                      }}
-                    >
-                      ⭐
-                    </span>
-                  ))}
-                </div>
-                <div className="text-sm font-medium text-primary text-center">
-                  合計: {(stampQuantity * 500).toLocaleString()}pt
-                </div>
-              </div>
-            )}
+              )
+            })}
           </div>
+
+          <p className="text-xs text-center text-muted-foreground mt-6 leading-relaxed">
+            いずれかのご支援をお選びください
+          </p>
         </div>
       </CardContent>
     </Card>
